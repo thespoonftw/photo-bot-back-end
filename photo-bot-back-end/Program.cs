@@ -14,4 +14,6 @@ app.MapControllers();
 
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
+app.UseStaticFiles(); // enables hosting images
+
 app.Run();
