@@ -16,4 +16,10 @@
     <Folder Include="wwwroot\thumbnails\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\thumbnails\holder.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
