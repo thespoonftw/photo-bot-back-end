@@ -1,53 +1,77 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting.Internal;
-using MySql.Data.MySqlClient;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using System;
-using System.Net;
+using photo_bot_back_end;
+using photo_bot_back_end.Services;
+using System.Text.Json;
 
 namespace photo_bot_backend.Controllers
 {
-    public record Photo(int Id, string Url);
-
     [ApiController]
-    [Route("[controller]")]
     public class PhotoController : ControllerBase
     {
-        private readonly ILogger<PhotoController> _logger;
-        private readonly IWebHostEnvironment webHostEnvironment;
+        private record PhotoPost(string url, string channelId);
 
-        private const string CONNECTION_STRING = @"server=localhost;userid=mike;password=Ph0t0B0t;database=photo-bot";
+        private record AlbumPost(string channelId, string name);
 
-        public PhotoController(ILogger<PhotoController> logger, IWebHostEnvironment webHostEnvironment)
+        public record AlbumData(Album album, List<Photo> photos);
+
+        private readonly ILogger<PhotoController> logger;
+        private readonly SqlService sql;
+        private readonly ThumbnailService thumbnails;
+
+        public PhotoController(ILogger<PhotoController> logger, ThumbnailService thumbnails, SqlService sql)
         {
-            _logger = logger;
-            this.webHostEnvironment = webHostEnvironment;
+            this.logger = logger;
+            this.thumbnails = thumbnails;
+            this.sql = sql;
         }
 
-        [HttpGet]
-        public IEnumerable<Photo> Get()
+        [HttpGet("album/{id}")]
+        public AlbumData GetAlbumData(int id)
         {
-            return GetAllPhotos();
+            var album = sql.GetAlbum(id);
+            var photos = sql.GetPhotos(id);
+            return new AlbumData(album, photos);
         }
 
-        [HttpPost]
-        public async void Post()
+        [HttpGet("album")]
+        public IEnumerable<Album> GetAllAlbums()
         {
-            var imageUrl = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-            var id = GetNewId();
-            var photo = new Photo(id, imageUrl);
-            SaveThumbnail(photo);
-            AddPhotoToDb(photo);
+            return sql.GetAllAlbums();
         }
 
+        [HttpPost("photo")]
+        public async void PostPhoto()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Post photo: {Body}", body);
+            var postPhoto = JsonSerializer.Deserialize<PhotoPost>(body);
+            if (postPhoto == null) { return; }
+
+            var id = sql.GetNextPhotoId();
+            var albumId = sql.GetAlbumId(postPhoto.channelId);
+            var photo = new Photo(id, postPhoto.url, albumId);
+            sql.AddPhoto(photo);
+            thumbnails.SaveThumbnail(id, postPhoto.url);
+        }
+
+        [HttpPost("album")]
+        public async void PostAlbum()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Post album: {Body}", body);
+            var postAlbum = JsonSerializer.Deserialize<AlbumPost>(body);
+            if (postAlbum == null) { return; }
+
+            var id = sql.GetNextAlbumId();
+            var album = new Album(id, postAlbum.channelId, postAlbum.name, DateTime.Now.Year);
+            sql.AddAlbum(album);
+        }
+
+        /*
         [HttpPost("generatethumbnails")]
         public void GenerateThumbnails()
         {
-            var photos = GetAllPhotos();
+            var photos = GetPhotosFromAlbum();
 
             foreach (var photo in photos)
             {
@@ -56,74 +80,6 @@ namespace photo_bot_backend.Controllers
                 SaveThumbnail(photo);
             }
         }
-
-        private async void SaveThumbnail(Photo photo)
-        {
-            using var client = new HttpClient();
-            using var stream = await client.GetStreamAsync(photo.Url);
-            using var image = Image.Load(stream);
-
-            var newWidth = 300;
-            var newHeight = 300;
-
-            if (image.Width > image.Height)
-            {
-                newHeight = (image.Height * 300) / image.Width;
-            }
-            else
-            {
-                newWidth = (image.Width * 300) / image.Height;
-            }
-
-            image.Mutate(x => x.Resize(newWidth, newHeight));
-            image.Save(GetThumbnailPath(photo.Id));
-        }
-
-        private int GetNewId()
-        {
-            using var con = new MySqlConnection(CONNECTION_STRING);
-            con.Open();
-
-            string sql = "select MAX(id) FROM photos";
-            using var cmd = new MySqlCommand(sql, con);
-            using MySqlDataReader rdr = cmd.ExecuteReader();
-            rdr.Read();
-            var maxId = rdr.GetInt32(0);
-            rdr.Close();
-            return maxId + 1;
-        }
-
-        private List<Photo> GetAllPhotos()
-        {
-            var returner = new List<Photo>();
-            using var con = new MySqlConnection(CONNECTION_STRING);
-            con.Open();
-            string sql = "SELECT * FROM photos";
-            using var cmd = new MySqlCommand(sql, con);
-            using MySqlDataReader rdr = cmd.ExecuteReader();
-
-            while (rdr.Read())
-            {
-                var id = rdr.GetInt32(0);
-                var url = rdr.GetString(1);
-                returner.Add(new Photo(id, url));
-            }
-            return returner;
-        }
-
-        private void AddPhotoToDb(Photo photo)
-        {
-            using var con = new MySqlConnection(CONNECTION_STRING);
-            con.Open();
-            string sql = $"INSERT INTO `photo-bot`.`photos` (`id`, `url`) VALUES('{photo.Id}', '{photo.Url}')";
-            using var cmd = new MySqlCommand(sql, con);
-            cmd.ExecuteNonQuery();
-        }
-
-        private string GetThumbnailPath(int id)
-        {
-            return $"{webHostEnvironment.WebRootPath}/thumbnails/{id}.jpg";
-        }
-
+        */
     }
 }
