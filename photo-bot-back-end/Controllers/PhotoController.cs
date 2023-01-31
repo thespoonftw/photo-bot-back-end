@@ -67,19 +67,17 @@ namespace photo_bot_backend.Controllers
             sql.AddAlbum(album);
         }
 
-        /*
-        [HttpPost("generatethumbnails")]
-        public void GenerateThumbnails()
+        [HttpPost("generatethumbnails/{id}")]
+        public void GenerateThumbnails(int id)
         {
-            var photos = GetPhotosFromAlbum();
+            var photos = sql.GetPhotos(id);
 
             foreach (var photo in photos)
             {
-                var isExisting = System.IO.File.Exists(GetThumbnailPath(photo.Id));
-                if (isExisting) { continue; }
-                SaveThumbnail(photo);
+                var isThumbail = thumbnails.IsThumbnailExisting(photo.id);
+                if (isThumbail) { continue; }
+                thumbnails.SaveThumbnail(photo.id, photo.url);
             }
         }
-        */
     }
 }

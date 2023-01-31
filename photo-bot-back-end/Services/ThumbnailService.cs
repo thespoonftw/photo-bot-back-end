@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
 namespace photo_bot_back_end.Services
@@ -35,6 +34,20 @@ namespace photo_bot_back_end.Services
 
             image.Mutate(x => x.Resize(newWidth, newHeight));
             image.Save(GetThumbnailPath(id));
+        }
+
+        public bool IsThumbnailExisting(int id)
+        {
+            using var client = new HttpClient();
+            try
+            {
+                var image = Image.Load(GetThumbnailPath(id));
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private string GetThumbnailPath(int id)
