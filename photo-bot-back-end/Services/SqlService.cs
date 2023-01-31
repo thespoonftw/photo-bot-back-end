@@ -78,6 +78,7 @@ namespace photo_bot_back_end.Services
                 var year = rdr.GetInt32(3);
                 returner.Add(new Album(id, channelId, name, year));
             }
+            rdr.Close();
             return returner;
         }
 
@@ -93,6 +94,7 @@ namespace photo_bot_back_end.Services
                 var album = rdr.GetInt32(2);
                 returner.Add(new Photo(id, url, album));
             }
+            rdr.Close();
             return returner;
         }
 
