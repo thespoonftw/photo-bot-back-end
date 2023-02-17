@@ -1,5 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System.Threading.Channels;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace photo_bot_back_end.Services
 {
@@ -9,102 +11,137 @@ namespace photo_bot_back_end.Services
 
         private const string CONNECTION_STRING = @"server=localhost;userid=mike;password=Ph0t0B0t;database=photo-bot";
 
-        private readonly MySqlConnection connection;
-
         public SqlService(ILogger<SqlService> logger)
         {
             this.logger = logger;
-            connection = new MySqlConnection(CONNECTION_STRING);
         }
 
-        public int GetNextPhotoId()
+        public async Task<int> GetNextPhotoIdAsync()
         {
-            using var rdr = Sql("SELECT MAX(id) FROM photo").ExecuteReader();
-            rdr.Read();
-            var maxId = rdr.GetInt32(0);
-            rdr.Close();
+            using var sql = await Sql.ReadAsync("SELECT MAX(id) FROM photo");
+            var maxId = sql.Reader.GetInt32(0);
             return maxId + 1;
         }
 
-        public int GetNextAlbumId()
+        public async Task<int> GetNextAlbumId()
         {
-            using var rdr = Sql("SELECT MAX(id) FROM album").ExecuteReader();
-            rdr.Read();
-            var maxId = rdr.GetInt32(0);
-            rdr.Close();
+            using var sql = await Sql.ReadAsync("SELECT MAX(id) FROM album");
+            sql.Reader.Read();
+            var maxId = sql.Reader.GetInt32(0);
             return maxId + 1;
         }
 
-        public int GetAlbumId(string channelId)
+        public async Task<int> GetAlbumId(string channelId)
         {
-            using var rdr = Sql($"SELECT id FROM album WHERE channelId={channelId}").ExecuteReader();
-            rdr.Read();
-            var albumId = rdr.GetInt32(0);
-            rdr.Close();
+            using var sql = await Sql.ReadAsync($"SELECT id FROM album WHERE channelId={channelId}");
+            sql.Reader.Read();
+            var albumId = sql.Reader.GetInt32(0);
             return albumId;
         }
 
-        public void AddPhoto(Photo photo)
+        public async Task AddPhoto(Photo photo)
         {
-            Sql($"INSERT INTO photo (id, url, albumId) VALUES ('{photo.id}', '{photo.url}', '{photo.albumId}')").ExecuteNonQuery();
+            await Sql.RunAsync($"INSERT INTO photo (id, url, albumId) VALUES ('{photo.id}', '{photo.url}', '{photo.albumId}')");
         }
 
-        public void AddAlbum(Album album)
+        public async Task AddAlbum(Album album)
         {
-            Sql($"INSERT INTO album (id, name, channelId, year) VALUES ('{album.id}', '{album.name}', '{album.channelId}', '{album.year}')").ExecuteNonQuery();
+            await Sql.RunAsync($"INSERT INTO album (id, name, channelId, year) VALUES ('{album.id}', '{album.name}', '{album.channelId}', '{album.year}')");
         }
 
-        public Album GetAlbum(int id)
+        public async Task UpdateAlbum(Album album)
         {
-            using var rdr = Sql($"SELECT * FROM album WHERE id={id}").ExecuteReader();
-            rdr.Read();
-            var channelId = rdr.GetString(1);
-            var name = rdr.GetString(2);
-            var year = rdr.GetInt32(3);
-            rdr.Close();
+            await Sql.RunAsync($"UPDATE album SET channelId = '{album.channelId}', name = '{album.name}', year = '{album.year}' WHERE id='{album.id}'");
+        }
+
+        public async Task<Album?> GetAlbum(int id)
+        {
+            using var sql = await Sql.ReadAsync($"SELECT * FROM album WHERE id={id}");
+            if (!sql.Reader.HasRows) return null;
+            var channelId = sql.Reader.GetString(1);
+            var name = sql.Reader.GetString(2);
+            var year = sql.Reader.GetInt32(3);
             return new Album(id, channelId, name, year);
         }
 
-        public List<Album> GetAllAlbums()
+        public async Task<Album?> GetAlbumFromChannelId(string channelId)
+        {
+            using var sql = await Sql.ReadAsync($"SELECT * FROM album WHERE channelId={channelId}");
+            if (!sql.Reader.HasRows) return null;
+            var id = sql.Reader.GetInt32(0);
+            var name = sql.Reader.GetString(2);
+            var year = sql.Reader.GetInt32(3);
+            return new Album(id, channelId, name, year);
+        }
+
+        public async Task<List<Album>> GetAllAlbums()
         {
             var returner = new List<Album>();
-            using var rdr = Sql($"SELECT * FROM album").ExecuteReader();
+            using var sql = await Sql.ReadAsync($"SELECT * FROM album");
 
-            while (rdr.Read())
+            while (sql.Reader.Read())
             {
-                var id = rdr.GetInt32(0);
-                var channelId = rdr.GetString(1);
-                var name = rdr.GetString(2);
-                var year = rdr.GetInt32(3);
+                var id = sql.Reader.GetInt32(0);
+                var channelId = sql.Reader.GetString(1);
+                var name = sql.Reader.GetString(2);
+                var year = sql.Reader.GetInt32(3);
                 returner.Add(new Album(id, channelId, name, year));
             }
-            rdr.Close();
             return returner;
         }
 
-        public List<Photo> GetPhotos(int albumId)
+        public async Task<List<Photo>> GetPhotos(int albumId)
         {
             var returner = new List<Photo>();
-            using var rdr = Sql($"SELECT * FROM photo WHERE albumId={albumId}").ExecuteReader();
+            using var sql = await Sql.ReadAsync($"SELECT * FROM photo WHERE albumId={albumId}");
 
-            while (rdr.Read())
+            while (sql.Reader.Read())
             {
-                var id = rdr.GetInt32(0);
-                var url = rdr.GetString(1);
-                var album = rdr.GetInt32(2);
+                var id = sql.Reader.GetInt32(0);
+                var url = sql.Reader.GetString(1);
+                var album = sql.Reader.GetInt32(2);
                 returner.Add(new Photo(id, url, album));
             }
-            rdr.Close();
             return returner;
         }
 
-        private MySqlCommand Sql(string query)
+        private class Sql : IDisposable
         {
-            if (connection.State != System.Data.ConnectionState.Open)
+            public MySqlDataReader Reader { get; init; }
+
+            private readonly MySqlConnection connection;
+
+            private Sql(MySqlConnection connection, MySqlDataReader reader)
             {
-                connection.Open();
+                this.connection = connection;
+                Reader = reader;                
             }
-            return new MySqlCommand(query, connection);
+
+            public static async Task<Sql> ReadAsync(string query)
+            {
+                var connection = new MySqlConnection(CONNECTION_STRING);
+                connection.Open();
+                var command = new MySqlCommand(query, connection);
+                var reader = command.ExecuteReader();
+                var sql = new Sql(connection, reader);
+                await sql.Reader.ReadAsync();
+                return sql;
+            }
+
+            public static async Task RunAsync(string query)
+            {
+                var connection = new MySqlConnection(CONNECTION_STRING);
+                connection.Open();
+                var command = new MySqlCommand(query, connection);
+                await command.ExecuteNonQueryAsync();
+                connection.Close();
+            }
+
+            public void Dispose()
+            {
+                Reader.Close();
+                connection.Close();
+            }
         }
 
     }

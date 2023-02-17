@@ -26,51 +26,63 @@ namespace photo_bot_backend.Controllers
         }
 
         [HttpGet("album/{id}")]
-        public AlbumData GetAlbumData(int id)
+        public async Task<AlbumData?> GetAlbumData(int id)
         {
-            var album = sql.GetAlbum(id);
-            var photos = sql.GetPhotos(id);
+            var album = await sql.GetAlbum(id);
+            if (album == null) return null;
+            var photos = await sql.GetPhotos(id);
             return new AlbumData(album, photos);
         }
 
         [HttpGet("album")]
-        public IEnumerable<Album> GetAllAlbums()
+        public async Task<IEnumerable<Album>> GetAllAlbums()
         {
-            return sql.GetAllAlbums();
+            return await sql.GetAllAlbums();
         }
 
         [HttpPost("photo")]
-        public async void PostPhoto()
+        public async Task PostPhoto()
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Post photo: {Body}", body);
             var postPhoto = JsonSerializer.Deserialize<PhotoPost>(body);
             if (postPhoto == null) { return; }
 
-            var id = sql.GetNextPhotoId();
-            var albumId = sql.GetAlbumId(postPhoto.channelId);
+            var id = await sql.GetNextPhotoIdAsync();
+            var albumId = await sql.GetAlbumId(postPhoto.channelId);
             var photo = new Photo(id, postPhoto.url, albumId);
-            sql.AddPhoto(photo);
+            await sql.AddPhoto(photo);
             thumbnails.SaveThumbnail(id, postPhoto.url);
         }
 
         [HttpPost("album")]
-        public async void PostAlbum()
+        public async Task PostAlbum()
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Post album: {Body}", body);
             var postAlbum = JsonSerializer.Deserialize<AlbumPost>(body);
             if (postAlbum == null) { return; }
 
-            var id = sql.GetNextAlbumId();
-            var album = new Album(id, postAlbum.channelId, postAlbum.name, DateTime.Now.Year);
-            sql.AddAlbum(album);
+            var existingAlbum = await sql.GetAlbumFromChannelId(postAlbum.channelId);
+            if (existingAlbum == null)
+            {
+                var id = await sql.GetNextAlbumId();
+                var album = new Album(id, postAlbum.channelId, postAlbum.name, DateTime.Now.Year);
+                await sql.AddAlbum(album);
+            }
+            else
+            {
+                var album = new Album(existingAlbum.id, postAlbum.channelId, postAlbum.name, existingAlbum.year);
+                await sql.UpdateAlbum(album);
+            }
+
+            
         }
 
         [HttpPost("generatethumbnails/{id}")]
-        public void GenerateThumbnails(int id)
+        public async Task GenerateThumbnails(int id)
         {
-            var photos = sql.GetPhotos(id);
+            var photos = await sql.GetPhotos(id);
 
             foreach (var photo in photos)
             {
