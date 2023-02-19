@@ -1,7 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
-namespace photo_bot_back_end.Services
+namespace photo_bot_back_end.Misc
 {
     public class ThumbnailService
     {
@@ -25,11 +25,11 @@ namespace photo_bot_back_end.Services
 
             if (image.Width > image.Height)
             {
-                newHeight = (image.Height * 300) / image.Width;
+                newHeight = image.Height * 300 / image.Width;
             }
             else
             {
-                newWidth = (image.Width * 300) / image.Height;
+                newWidth = image.Width * 300 / image.Height;
             }
 
             image.Mutate(x => x.Resize(newWidth, newHeight));

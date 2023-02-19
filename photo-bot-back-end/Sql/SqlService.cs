@@ -1,10 +1,5 @@
-﻿using MySql.Data.MySqlClient;
-using System.Data.Common;
-using System.Threading.Channels;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-
-namespace photo_bot_back_end.Services
+﻿
+namespace photo_bot_back_end.Sql
 {
     public class SqlService
     {
@@ -49,6 +44,11 @@ namespace photo_bot_back_end.Services
             await SqlConnection.NonQuery($"UPDATE album SET channelId = '{album.channelId}', name = '{album.name}', year = '{album.year}' WHERE id='{album.id}'");
         }
 
+        public async Task UpdatePhoto(Photo photo)
+        {
+            await SqlConnection.NonQuery($"UPDATE photo SET albumId = '{photo.albumId}', url = '{photo.url}' WHERE id='{photo.id}'");
+        }
+
         public async Task<Album?> GetAlbum(int id)
         {
             using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE id={id}");
@@ -67,6 +67,16 @@ namespace photo_bot_back_end.Services
                 return null;
             }
             return sql.ReadAlbum();
+        }
+
+        public async Task<Photo?> GetPhotoFromUrl(string url)
+        {
+            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE url={url}");
+            if (!sql.Next())
+            {
+                return null;
+            }
+            return sql.ReadPhoto();
         }
 
         public async Task<List<Album>> GetAllAlbums()

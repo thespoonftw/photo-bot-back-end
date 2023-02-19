@@ -1,4 +1,6 @@
-using photo_bot_back_end.Services;
+using photo_bot_back_end.Misc;
+using photo_bot_back_end.Post;
+using photo_bot_back_end.Sql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddSingleton<SqlService>();
+builder.Services.AddSingleton<PostService>();
 builder.Services.AddSingleton<ThumbnailService>();
 
 var app = builder.Build();

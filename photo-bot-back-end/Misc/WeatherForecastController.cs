@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace photo_bot_backend.Controllers
+namespace photo_bot_backend.Misc
 {
     [ApiController]
     [Route("[controller]")]

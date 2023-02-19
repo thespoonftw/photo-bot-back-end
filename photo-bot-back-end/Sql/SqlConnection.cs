@@ -1,7 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System.Data.Common;
 
-namespace photo_bot_back_end.Services
+namespace photo_bot_back_end.Sql
 {
     public class SqlConnection : IDisposable
     {
@@ -13,7 +13,7 @@ namespace photo_bot_back_end.Services
         private SqlConnection(MySqlConnection connection, DbDataReader reader)
         {
             this.connection = connection;
-            this.reader = reader;                
+            this.reader = reader;
         }
 
         public static async Task<SqlConnection> Query(string query)
