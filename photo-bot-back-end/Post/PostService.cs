@@ -19,17 +19,19 @@ namespace photo_bot_back_end.Post
         public async Task PostPhoto(PhotoPost photoPost)
         {
             var albumId = await sql.GetAlbumId(photoPost.channelId);
+            var userId = await GetOrCreateUserId(photoPost.channelId);
+            
             var existingPhoto = await sql.GetPhotoFromUrl(photoPost.url);
             if (existingPhoto == null)
             {
                 var id = await sql.GetNextPhotoIdAsync();
-                var photo = new Photo(id, photoPost.url, albumId);
+                var photo = new Photo(id, photoPost.url, albumId, userId, photoPost.uploadTime, photoPost.caption);
                 await sql.AddPhoto(photo);
                 thumbnails.SaveThumbnail(id, photoPost.url);
             }
             else
             {
-                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId);
+                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId, userId, photoPost.uploadTime, photoPost.caption);
                 await sql.UpdatePhoto(photo);
             }
         }
@@ -49,7 +51,21 @@ namespace photo_bot_back_end.Post
                 await sql.UpdateAlbum(album);
             }
         }
+        
+        public async Task<int> GetOrCreateUserId(string discordId)
+        {
+            var userId = await sql.GetUserId(discordId);
 
+            if (userId != null)
+            {
+                return (int)userId;
+            }
+
+            var newId = await sql.GetNextUserId();
+            var user = new User(newId, discordId, "New User");
+            await sql.AddUser(user);
+            return newId;
+        }
 
     }
 

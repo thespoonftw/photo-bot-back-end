@@ -22,6 +22,12 @@ namespace photo_bot_back_end.Sql
             return sql.ReadId() + 1;
         }
 
+        public async Task<int> GetNextUserId()
+        {
+            using var sql = await SqlConnection.Query("SELECT MAX(id) FROM user");
+            return sql.ReadId() + 1;
+        }
+
         public async Task<int> GetAlbumId(string channelId)
         {
             using var sql = await SqlConnection.Query($"SELECT id FROM album WHERE channelId={channelId}");
@@ -29,14 +35,29 @@ namespace photo_bot_back_end.Sql
             return sql.ReadId();
         }
 
+        public async Task<int?> GetUserId(string discordId)
+        {
+            using var sql = await SqlConnection.Query($"SELECT id FROM user WHERE discordId={discordId}");
+            if (sql.Next())
+            {
+                return sql.ReadId();
+            }
+            return null;
+        }
+
         public async Task AddPhoto(Photo photo)
         {
-            await SqlConnection.NonQuery($"INSERT INTO photo (id, url, albumId) VALUES ('{photo.id}', '{photo.url}', '{photo.albumId}')");
+            await SqlConnection.NonQuery($"INSERT INTO photo (id, url, albumId, userId, uploadTime, caption) VALUES ('{photo.id}', '{photo.url}', '{photo.albumId}', '{photo.userId}', '{photo.uploadTime}', '{photo.caption}')");
         }
 
         public async Task AddAlbum(Album album)
         {
             await SqlConnection.NonQuery($"INSERT INTO album (id, name, channelId, year) VALUES ('{album.id}', '{album.name}', '{album.channelId}', '{album.year}')");
+        }
+
+        public async Task AddUser(User user)
+        {
+            await SqlConnection.NonQuery($"$INSERT INTO user (id, name, discordId) VALUES ('{user.id}', '{user.name}', '{user.discordId}')");
         }
 
         public async Task UpdateAlbum(Album album)
@@ -46,7 +67,7 @@ namespace photo_bot_back_end.Sql
 
         public async Task UpdatePhoto(Photo photo)
         {
-            await SqlConnection.NonQuery($"UPDATE photo SET albumId = '{photo.albumId}', url = '{photo.url}' WHERE id='{photo.id}'");
+            await SqlConnection.NonQuery($"UPDATE photo SET albumId='{photo.albumId}', url='{photo.url}', userId='{photo.userId}, uploadTime='{photo.uploadTime}', caption='{photo.caption}' WHERE id='{photo.id}'");
         }
 
         public async Task<Album?> GetAlbum(int id)
