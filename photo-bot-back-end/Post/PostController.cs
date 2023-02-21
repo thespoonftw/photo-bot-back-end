@@ -12,7 +12,7 @@ namespace photo_bot_back_end.Post
         private readonly ILogger<PostController> logger;
         private readonly PostService postService;
 
-        public PostController(ILogger<PostController> logger, ThumbnailService thumbnails, SqlService sql, PostService postService)
+        public PostController(ILogger<PostController> logger, PostService postService)
         {
             this.logger = logger;
             this.postService = postService;

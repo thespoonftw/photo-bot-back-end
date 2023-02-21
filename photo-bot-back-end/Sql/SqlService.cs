@@ -13,18 +13,21 @@ namespace photo_bot_back_end.Sql
         public async Task<int> GetNextPhotoIdAsync()
         {
             using var sql = await SqlConnection.Query("SELECT MAX(id) FROM photo");
+            sql.Next();
             return sql.ReadId() + 1;
         }
 
         public async Task<int> GetNextAlbumId()
         {
             using var sql = await SqlConnection.Query("SELECT MAX(id) FROM album");
+            sql.Next();
             return sql.ReadId() + 1;
         }
 
         public async Task<int> GetNextUserId()
         {
             using var sql = await SqlConnection.Query("SELECT MAX(id) FROM user");
+            sql.Next();
             return sql.ReadId() + 1;
         }
 
@@ -45,29 +48,15 @@ namespace photo_bot_back_end.Sql
             return null;
         }
 
-        public async Task AddPhoto(Photo photo)
+        public async Task MergeItem<T>(T item)
         {
-            await SqlConnection.NonQuery($"INSERT INTO photo (id, url, albumId, userId, uploadTime, caption) VALUES ('{photo.id}', '{photo.url}', '{photo.albumId}', '{photo.userId}', '{photo.uploadTime}', '{photo.caption}')");
-        }
-
-        public async Task AddAlbum(Album album)
-        {
-            await SqlConnection.NonQuery($"INSERT INTO album (id, name, channelId, year) VALUES ('{album.id}', '{album.name}', '{album.channelId}', '{album.year}')");
-        }
-
-        public async Task AddUser(User user)
-        {
-            await SqlConnection.NonQuery($"$INSERT INTO user (id, name, discordId) VALUES ('{user.id}', '{user.name}', '{user.discordId}')");
-        }
-
-        public async Task UpdateAlbum(Album album)
-        {
-            await SqlConnection.NonQuery($"UPDATE album SET channelId = '{album.channelId}', name = '{album.name}', year = '{album.year}' WHERE id='{album.id}'");
-        }
-
-        public async Task UpdatePhoto(Photo photo)
-        {
-            await SqlConnection.NonQuery($"UPDATE photo SET albumId='{photo.albumId}', url='{photo.url}', userId='{photo.userId}, uploadTime='{photo.uploadTime}', caption='{photo.caption}' WHERE id='{photo.id}'");
+            var name = typeof(T).Name;
+            var props = typeof(T).GetProperties();
+            var columns = string.Join(",", props.Select(p => p.Name));
+            var values = string.Join(",", props.Select(p => $"'{p.GetValue(item)!.ToString()}'"));
+            var pairs = string.Join(",", props.Select(p => $"{p.Name}='{p.GetValue(item!)}'"));
+            var query = $"INSERT INTO {name} ({columns}) VALUES ({values}) ON DUPLICATE KEY UPDATE {pairs}";
+            await SqlConnection.NonQuery(query);
         }
 
         public async Task<Album?> GetAlbum(int id)
@@ -92,7 +81,7 @@ namespace photo_bot_back_end.Sql
 
         public async Task<Photo?> GetPhotoFromUrl(string url)
         {
-            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE url={url}");
+            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE url='{url}'");
             if (!sql.Next())
             {
                 return null;
@@ -118,6 +107,28 @@ namespace photo_bot_back_end.Sql
             while (sql.Next())
             {
                 returner.Add(sql.ReadPhoto());
+            }
+            return returner;
+        }
+
+        public async Task<List<Album>> GetAlbumsForUser(int userId)
+        {
+            var returner = new List<Album>();
+            using var sql = await SqlConnection.Query($"SELECT * FROM album JOIN userInAlbum ON album.id = userInAlbum.albumId WHERE userInAlbum.userId={userId}");
+            while (sql.Next())
+            {
+                returner.Add(sql.ReadAlbum());
+            }
+            return returner;
+        }
+
+        public async Task<List<User>> GetUsersForAlbum(int albumId)
+        {
+            var returner = new List<User>();
+            using var sql = await SqlConnection.Query($"SELECT * FROM user JOIN userInAlbum ON user.id = userInAlbum.userId WHERE userInAlbum.albumId={albumId}");
+            while (sql.Next())
+            {
+                returner.Add(sql.ReadUser());
             }
             return returner;
         }

@@ -12,4 +12,6 @@ namespace photo_bot_back_end
     public record Album(int id, string channelId, string name, int year);
 
     public record User(int id, string discordId, string name);
+
+    public record UserInAlbum(int userId, int albumId);
 }
