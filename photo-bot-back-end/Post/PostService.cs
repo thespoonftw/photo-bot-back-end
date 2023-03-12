@@ -19,7 +19,7 @@ namespace photo_bot_back_end.Post
         public async Task PostPhoto(PhotoPost photoPost)
         {
             var albumId = await sql.GetAlbumId(photoPost.channelId);
-            var userId = await GetOrCreateUserId(photoPost.channelId);
+            var userId = await GetOrCreateUserId(photoPost.uploaderId);
             
             var existingPhoto = await sql.GetPhotoFromUrl(photoPost.url);
             if (existingPhoto == null)

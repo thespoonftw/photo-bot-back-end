@@ -50,7 +50,7 @@ namespace photo_bot_back_end.Sql
 
         public async Task MergeItem<T>(T item)
         {
-            var name = typeof(T).Name;
+            var name = ToCamel(typeof(T).Name);
             var props = typeof(T).GetProperties();
             var columns = string.Join(",", props.Select(p => p.Name));
             var values = string.Join(",", props.Select(p => $"'{p.GetValue(item)!.ToString()}'"));
@@ -131,6 +131,16 @@ namespace photo_bot_back_end.Sql
                 returner.Add(sql.ReadUser());
             }
             return returner;
+        }
+
+        private string ToCamel(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            char[] charArray = input.ToCharArray();
+            charArray[0] = char.ToLower(charArray[0]);
+            return new string(charArray);
         }
     }
 
