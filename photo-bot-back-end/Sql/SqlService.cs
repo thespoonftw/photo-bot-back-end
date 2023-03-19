@@ -50,7 +50,7 @@ namespace photo_bot_back_end.Sql
 
         public async Task MergeItem<T>(T item)
         {
-            var name = ToCamel(typeof(T).Name);
+            var name = typeof(T).Name.ToLower();
             var props = typeof(T).GetProperties();
             var columns = string.Join(",", props.Select(p => p.Name));
             var values = string.Join(",", props.Select(p => $"'{p.GetValue(item)!.ToString()}'"));
@@ -114,7 +114,7 @@ namespace photo_bot_back_end.Sql
         public async Task<List<Album>> GetAlbumsForUser(int userId)
         {
             var returner = new List<Album>();
-            using var sql = await SqlConnection.Query($"SELECT * FROM album JOIN userInAlbum ON album.id = userInAlbum.albumId WHERE userInAlbum.userId={userId}");
+            using var sql = await SqlConnection.Query($"SELECT * FROM album JOIN userinalbum ON album.id = userinalbum.albumId WHERE userinalbum.userId={userId}");
             while (sql.Next())
             {
                 returner.Add(sql.ReadAlbum());
@@ -125,7 +125,7 @@ namespace photo_bot_back_end.Sql
         public async Task<List<User>> GetUsersForAlbum(int albumId)
         {
             var returner = new List<User>();
-            using var sql = await SqlConnection.Query($"SELECT * FROM user JOIN userInAlbum ON user.id = userInAlbum.userId WHERE userInAlbum.albumId={albumId}");
+            using var sql = await SqlConnection.Query($"SELECT * FROM user JOIN userinalbum ON user.id = userinalbum.userId WHERE userinalbum.albumId={albumId}");
             while (sql.Next())
             {
                 returner.Add(sql.ReadUser());
@@ -137,16 +137,5 @@ namespace photo_bot_back_end.Sql
         {
             await SqlConnection.NonQuery($"DELETE FROM userinalbum WHERE albumId = {albumId}");
         }
-
-        private string ToCamel(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                return input;
-
-            char[] charArray = input.ToCharArray();
-            charArray[0] = char.ToLower(charArray[0]);
-            return new string(charArray);
-        }
     }
-
 }
