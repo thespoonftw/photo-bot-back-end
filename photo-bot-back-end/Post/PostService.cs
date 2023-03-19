@@ -48,7 +48,8 @@ namespace photo_bot_back_end.Post
             }
             else
             {
-                var album = new Album(existingAlbum.id, existingAlbum.channelId, albumPost.name, existingAlbum.year);
+                var newName = albumPost.name != "" ? albumPost.name : existingAlbum.name;
+                var album = new Album(existingAlbum.id, newName, albumPost.name, existingAlbum.year);
                 await sql.MergeItem(album);
                 await CreateUsersInAlbum(existingAlbum.id, albumPost.members);
             }
