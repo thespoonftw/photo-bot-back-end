@@ -100,7 +100,7 @@ namespace photo_bot_back_end.Sql
             return returner;
         }
 
-        public async Task<List<Photo>> GetPhotos(int albumId)
+        public async Task<List<Photo>> GetPhotosInAlbum(int albumId)
         {
             var returner = new List<Photo>();
             using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE albumId={albumId}");
@@ -131,6 +131,11 @@ namespace photo_bot_back_end.Sql
                 returner.Add(sql.ReadUser());
             }
             return returner;
+        }
+
+        public async Task RemoveAllUsersForAlbum(int albumId)
+        {
+            await SqlConnection.NonQuery($"DELETE FROM userinalbum WHERE albumId = {albumId}");
         }
 
         private string ToCamel(string input)

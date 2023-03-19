@@ -22,7 +22,7 @@ namespace photo_bot_back_end.Misc
         [HttpPost("generatethumbnails/{id}")]
         public async Task GenerateThumbnails(int id)
         {
-            var photos = await sqlService.GetPhotos(id);
+            var photos = await sqlService.GetPhotosInAlbum(id);
 
             foreach (var photo in photos)
             {

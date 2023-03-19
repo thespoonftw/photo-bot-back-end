@@ -3,7 +3,7 @@ namespace photo_bot_back_end
 {
     public record PhotoPost(string url, string channelId, string uploaderId, string uploadTime, string caption);
 
-    public record AlbumPost(string channelId, string name, List<string> participantIds);
+    public record AlbumPost(string channelId, string name, List<string> members);
 
 
 

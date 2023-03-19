@@ -44,13 +44,13 @@ namespace photo_bot_back_end.Post
                 var id = await sql.GetNextAlbumId();
                 var album = new Album(id, albumPost.channelId, albumPost.name, DateTime.Now.Year);
                 await sql.MergeItem(album);
-                await CreateUsersInAlbum(id, albumPost.participantIds);
+                await CreateUsersInAlbum(id, albumPost.members);
             }
             else
             {
                 var album = new Album(existingAlbum.id, existingAlbum.channelId, albumPost.name, existingAlbum.year);
                 await sql.MergeItem(album);
-                await CreateUsersInAlbum(existingAlbum.id, albumPost.participantIds);
+                await CreateUsersInAlbum(existingAlbum.id, albumPost.members);
             }
         }
         
@@ -71,6 +71,8 @@ namespace photo_bot_back_end.Post
 
         public async Task CreateUsersInAlbum(int albumId, List<string> participantIds)
         {
+            await sql.RemoveAllUsersForAlbum(albumId);
+
             foreach (var discordId in participantIds)
             {
                 var userId = await GetOrCreateUserId(discordId);
