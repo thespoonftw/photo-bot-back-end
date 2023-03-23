@@ -69,6 +69,26 @@ namespace photo_bot_back_end.Sql
             return sql.ReadAlbum();
         }
 
+        public async Task<Photo?> GetPhoto(int id)
+        {
+            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE id='{id}'");
+            if (!sql.Next())
+            {
+                return null;
+            }
+            return sql.ReadPhoto();
+        }
+
+        public async Task<User?> GetUser(int id)
+        {
+            using var sql = await SqlConnection.Query($"SELECT * FROM user WHERE id='{id}'");
+            if (!sql.Next())
+            {
+                return null;
+            }
+            return sql.ReadUser();
+        }
+
         public async Task<Album?> GetAlbumFromChannelId(string channelId)
         {
             using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE channelId={channelId}");
@@ -87,6 +107,16 @@ namespace photo_bot_back_end.Sql
                 return null;
             }
             return sql.ReadPhoto();
+        }
+
+        public async Task<User?> GetUserFromDiscordId(string discordId)
+        {
+            using var sql = await SqlConnection.Query($"SELECT * FROM user WHERE discordId='{discordId}'");
+            if (!sql.Next())
+            {
+                return null;
+            }
+            return sql.ReadUser();
         }
 
         public async Task<List<Album>> GetAllAlbums()
@@ -136,6 +166,11 @@ namespace photo_bot_back_end.Sql
         public async Task RemoveAllUsersForAlbum(int albumId)
         {
             await SqlConnection.NonQuery($"DELETE FROM userinalbum WHERE albumId = {albumId}");
+        }
+
+        public async Task DeletePhoto(int id)
+        {
+            await SqlConnection.NonQuery($"DELETE FROM photo WHERE id={id}");
         }
     }
 }

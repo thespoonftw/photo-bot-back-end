@@ -81,6 +81,31 @@ namespace photo_bot_back_end.Post
             }
         }
 
-    }
+        public async Task<HttpResponseMessage> DeletePhotoById(PhotoDeleteById photoDelete)
+        {
+            var getPhoto = sql.GetPhoto(photoDelete.photoId);
+            var getUser = sql.GetUserFromDiscordId(photoDelete.requesterId);
+            return await DeletePhoto(await getPhoto, await getUser);
+            
+        }
 
+        public async Task<HttpResponseMessage> DeletePhotoByUrl(PhotoDeleteByUrl photoDelete)
+        {
+            var getPhoto = sql.GetPhotoFromUrl(photoDelete.url);
+            var getUser = sql.GetUserFromDiscordId(photoDelete.requesterId);
+            return await DeletePhoto(await getPhoto, await getUser);
+        }
+
+        private async Task<HttpResponseMessage> DeletePhoto(Photo? photo, User? user)
+        {
+            if (photo == null)
+                return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+
+            if (user == null || photo.userId != user.id)
+                return new HttpResponseMessage(System.Net.HttpStatusCode.Forbidden);
+
+            await sql.DeletePhoto(photo.id);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        }
+    }
 }

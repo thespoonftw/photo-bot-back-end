@@ -39,5 +39,27 @@ namespace photo_bot_back_end.Post
 
             await postService.PostAlbum(postAlbum);
         }
+
+        [HttpPost("delete_photo_by_id")]
+        public async Task<HttpResponseMessage> DeletePhotoById()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Delete photo: {Body}", body);
+            var deletePhoto = JsonSerializer.Deserialize<PhotoDeleteById>(body);
+            if (deletePhoto == null) { return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest); }
+
+            return await postService.DeletePhotoById(deletePhoto);
+        }
+
+        [HttpPost("delete_photo_by_url")]
+        public async Task<HttpResponseMessage> DeletePhotoByUrl()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Delete photo: {Body}", body);
+            var deletePhoto = JsonSerializer.Deserialize<PhotoDeleteByUrl>(body);
+            if (deletePhoto == null) { return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest); }
+
+            return await postService.DeletePhotoByUrl(deletePhoto);
+        }
     }
 }
