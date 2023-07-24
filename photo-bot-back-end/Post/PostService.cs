@@ -25,13 +25,13 @@ namespace photo_bot_back_end.Post
             if (existingPhoto == null)
             {
                 var id = await sql.GetNextPhotoIdAsync();
-                var photo = new Photo(id, photoPost.url, albumId, userId, photoPost.uploadTime, photoPost.caption);
+                var photo = new Photo(id, photoPost.url, albumId, 0, userId, photoPost.uploadTime, photoPost.caption);
                 await sql.MergeItem(photo);
                 thumbnails.SaveThumbnail(id, photoPost.url);
             }
             else
             {
-                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId, userId, photoPost.uploadTime, photoPost.caption);
+                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId, userId, existingPhoto.score, photoPost.uploadTime, photoPost.caption);
                 await sql.MergeItem(photo);
             }
         }
@@ -42,14 +42,14 @@ namespace photo_bot_back_end.Post
             if (existingAlbum == null)
             {
                 var id = await sql.GetNextAlbumId();
-                var album = new Album(id, albumPost.channelId, albumPost.name, DateTime.Now.Year);
+                var album = new Album(id, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
                 await sql.MergeItem(album);
                 await CreateUsersInAlbum(id, albumPost.members);
             }
             else
             {
                 var newName = albumPost.name != "" ? albumPost.name : existingAlbum.name;
-                var album = new Album(existingAlbum.id, existingAlbum.channelId, newName, existingAlbum.year);
+                var album = new Album(existingAlbum.id, existingAlbum.channelId, newName, existingAlbum.year, existingAlbum.month);
                 await sql.MergeItem(album);
                 await CreateUsersInAlbum(existingAlbum.id, albumPost.members);
             }
@@ -65,7 +65,7 @@ namespace photo_bot_back_end.Post
             }
 
             var newId = await sql.GetNextUserId();
-            var user = new User(newId, discordId, "New User");
+            var user = new User(newId, discordId, "New User", 0);
             await sql.MergeItem(user);
             return newId;
         }

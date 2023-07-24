@@ -18,13 +18,16 @@ namespace photo_bot_back_end.Misc
             this.sql = sql;
         }
 
-        [HttpGet("album/{id}")]
-        public async Task<AlbumData?> GetAlbumData(int id)
+        [HttpGet("album/{urlName}")]
+        public async Task<AlbumData?> GetAlbumData(string urlName)
         {
-            var album = await sql.GetAlbum(id);
+            var underscoreLastIndex = urlName.LastIndexOf("_");
+            var name = urlName[0..underscoreLastIndex].Replace("_", " ");
+            var year = int.Parse(urlName[(underscoreLastIndex+1)..]);
+            var album = await sql.GetAlbum(name, year);
             if (album == null) return null;
-            var photosAsync = sql.GetPhotosInAlbum(id);
-            var usersAsync = sql.GetUsersForAlbum(id);            
+            var photosAsync = sql.GetPhotosInAlbum(album.id);
+            var usersAsync = sql.GetUsersForAlbum(album.id);            
             return new AlbumData(album, await photosAsync, await usersAsync);
         }
 
@@ -32,6 +35,12 @@ namespace photo_bot_back_end.Misc
         public async Task<IEnumerable<Album>> GetAllAlbums()
         {
             return await sql.GetAllAlbums();
+        }
+
+        [HttpGet("user")]
+        public async Task<IEnumerable<User>> GetAllUsers()
+        {
+            return await sql.GetAllUsers();
         }
     }
 }

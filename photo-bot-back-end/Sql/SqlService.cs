@@ -59,9 +59,9 @@ namespace photo_bot_back_end.Sql
             await SqlConnection.NonQuery(query);
         }
 
-        public async Task<Album?> GetAlbum(int id)
+        public async Task<Album?> GetAlbum(string name, int year)
         {
-            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE id={id}");
+            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE name='{name}' AND year={year}");
             if (!sql.Next())
             {
                 return null;
@@ -126,6 +126,17 @@ namespace photo_bot_back_end.Sql
             while (sql.Next())
             {
                 returner.Add(sql.ReadAlbum());
+            }
+            return returner;
+        }
+
+        public async Task<List<User>> GetAllUsers()
+        {
+            var returner = new List<User>();
+            using var sql = await SqlConnection.Query("$SELECT * FROM user");
+            while (sql.Next())
+            {
+                returner.Add(sql.ReadUser());
             }
             return returner;
         }
