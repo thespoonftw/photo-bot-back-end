@@ -7,7 +7,7 @@ namespace photo_bot_back_end.Misc
     [ApiController]
     public class GetController : ControllerBase
     {
-        public record AlbumData(Album album, List<Photo> photos, List<User> usersInAlbum);
+        public record AlbumData(Album album, List<Photo> photos, List<int> usersInAlbum);
 
         private readonly ILogger<PostController> logger;
         private readonly SqlService sql;
@@ -29,6 +29,12 @@ namespace photo_bot_back_end.Misc
             var photosAsync = sql.GetPhotosInAlbum(album.id);
             var usersAsync = sql.GetUsersForAlbum(album.id);            
             return new AlbumData(album, await photosAsync, await usersAsync);
+        }
+
+        [HttpGet("photosByUser/{userId}")]
+        public async Task<List<Photo>> GetPhotosByUser(int userId)
+        {
+            return await sql.GetPhotosByUser(userId);
         }
 
         [HttpGet("album")]

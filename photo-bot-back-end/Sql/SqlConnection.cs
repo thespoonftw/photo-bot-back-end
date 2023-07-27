@@ -87,10 +87,17 @@ namespace photo_bot_back_end.Sql
         public User ReadUser()
         {
             var id = reader.GetInt32(0);
-            var discordId = reader.GetString(1);
+            var discordId = reader.SafeGetString(1);
             var name = reader.GetString(2);
             var level = reader.GetInt32(3);
             return new User(id, discordId, name, level);
+        }
+
+        public UserInAlbum ReadUserInAlbum()
+        {
+            var userId = reader.GetInt32(0);
+            var albumId = reader.GetInt32(1);
+            return new UserInAlbum(userId, albumId);
         }
     }
 }

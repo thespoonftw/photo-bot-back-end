@@ -133,7 +133,7 @@ namespace photo_bot_back_end.Sql
         public async Task<List<User>> GetAllUsers()
         {
             var returner = new List<User>();
-            using var sql = await SqlConnection.Query("$SELECT * FROM user");
+            using var sql = await SqlConnection.Query($"SELECT * FROM user");
             while (sql.Next())
             {
                 returner.Add(sql.ReadUser());
@@ -152,6 +152,17 @@ namespace photo_bot_back_end.Sql
             return returner;
         }
 
+        public async Task<List<Photo>> GetPhotosByUser(int userId)
+        {
+            var returner = new List<Photo>();
+            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE userId={userId}");
+            while (sql.Next())
+            {
+                returner.Add(sql.ReadPhoto());
+            }
+            return returner;
+        }
+
         public async Task<List<Album>> GetAlbumsForUser(int userId)
         {
             var returner = new List<Album>();
@@ -163,13 +174,13 @@ namespace photo_bot_back_end.Sql
             return returner;
         }
 
-        public async Task<List<User>> GetUsersForAlbum(int albumId)
+        public async Task<List<int>> GetUsersForAlbum(int albumId)
         {
-            var returner = new List<User>();
-            using var sql = await SqlConnection.Query($"SELECT * FROM user JOIN userinalbum ON user.id = userinalbum.userId WHERE userinalbum.albumId={albumId}");
+            var returner = new List<int>();
+            using var sql = await SqlConnection.Query($"SELECT * FROM userinalbum WHERE albumId={albumId}");
             while (sql.Next())
             {
-                returner.Add(sql.ReadUser());
+                returner.Add(sql.ReadUserInAlbum().userId);
             }
             return returner;
         }
