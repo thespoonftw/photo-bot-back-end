@@ -62,6 +62,11 @@ namespace photo_bot_back_end.Sql
             return reader.GetInt32(0);
         }
 
+        public int ReadInt(int index)
+        {
+            return reader.GetInt32(index);
+        }
+
         public Album ReadAlbum()
         {
             var id = reader.GetInt32(0);

@@ -1,4 +1,6 @@
 ﻿
+using System.Text.RegularExpressions;
+
 namespace photo_bot_back_end.Sql
 {
     public class SqlService
@@ -127,6 +129,25 @@ namespace photo_bot_back_end.Sql
             {
                 returner.Add(sql.ReadAlbum());
             }
+            return returner;
+        }
+
+        public async Task<Dictionary<int, int>> GetAlbumCounts()
+        {
+            var returner = new Dictionary<int, int>();
+
+            using var sql = await SqlConnection.Query(
+                "SELECT album.id, COUNT(photo.albumId) AS num_photos "
+                + "FROM album "
+                + "LEFT JOIN photo ON album.id = photo.albumId "
+                + "GROUP BY album.id"
+            );
+
+            while (sql.Next())
+            {
+                returner.Add(sql.ReadId(), sql.ReadInt(1));
+            }
+
             return returner;
         }
 
