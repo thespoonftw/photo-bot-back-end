@@ -91,6 +91,16 @@ namespace photo_bot_back_end.Sql
             return sql.ReadUser();
         }
 
+        public async Task<Vote?> GetVote(int userId, int photoId)
+        {
+            using var sql = await SqlConnection.Query($"SELECT * FROM vote WHERE userId='{userId}' AND photoId='{photoId}'");
+            if (!sql.Next())
+            {
+                return null;
+            }
+            return sql.ReadVote();
+        }
+
         public async Task<Album?> GetAlbumFromChannelId(string channelId)
         {
             using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE channelId={channelId}");
@@ -136,12 +146,12 @@ namespace photo_bot_back_end.Sql
         {
             var returner = new Dictionary<int, int>();
 
-            using var sql = await SqlConnection.Query(
-                "SELECT album.id, COUNT(photo.albumId) AS num_photos "
-                + "FROM album "
-                + "LEFT JOIN photo ON album.id = photo.albumId "
-                + "GROUP BY album.id"
-            );
+            using var sql = await SqlConnection.Query($@"
+                SELECT album.id, COUNT(photo.albumId) AS num_photos
+                FROM album
+                LEFT JOIN photo ON album.id = photo.albumId
+                GROUP BY album.id
+            ");
 
             while (sql.Next())
             {
@@ -173,13 +183,38 @@ namespace photo_bot_back_end.Sql
             return returner;
         }
 
-        public async Task<List<Photo>> GetPhotosByUser(int userId)
+        public async Task<List<PhotoData>> GetPhotosByUser(int userId)
         {
-            var returner = new List<Photo>();
-            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE userId={userId}");
+            var returner = new List<PhotoData>();
+            using var sql = await SqlConnection.Query($@"
+                SELECT p.*, COALESCE(SUM(v.level), 0) AS score
+                FROM photo p
+                LEFT JOIN vote v ON p.id = v.photoId
+                WHERE p.userId = {userId}
+                GROUP BY p.id, p.url, p.albumId, p.userId, p.uploadTime, p.caption
+            ");
+
             while (sql.Next())
             {
-                returner.Add(sql.ReadPhoto());
+                returner.Add(sql.ReadPhotoData());
+            }
+            return returner;
+        }
+
+        public async Task<List<PhotoData>> GetPhotosForAlbum(int albumId)
+        {
+            var returner = new List<PhotoData>();
+            using var sql = await SqlConnection.Query($@"
+                SELECT p.*, COALESCE(SUM(v.level), 0) AS score
+                FROM photo p
+                LEFT JOIN vote v ON p.id = v.photoId
+                WHERE p.albumId = {albumId}
+                GROUP BY p.id, p.url, p.albumId, p.userId, p.uploadTime, p.caption
+            ");
+
+            while (sql.Next())
+            {
+                returner.Add(sql.ReadPhotoData());
             }
             return returner;
         }

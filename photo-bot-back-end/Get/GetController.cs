@@ -1,63 +1,55 @@
 using Microsoft.AspNetCore.Mvc;
 using photo_bot_back_end.Post;
-using photo_bot_back_end.Sql;
 
 namespace photo_bot_back_end.Misc
 {
     [ApiController]
     public class GetController : ControllerBase
     {
-        public record AlbumListData(string name, int year, int month, int numberOfPhotos);
-
-        public record AlbumData(Album album, List<Photo> photos, List<int> usersInAlbum);
-
         private readonly ILogger<PostController> logger;
-        private readonly SqlService sql;
+        private readonly GetService getService;
 
-        public GetController(ILogger<PostController> logger, SqlService sql)
+        public GetController(ILogger<PostController> logger, GetService getService)
         {
             this.logger = logger;
-            this.sql = sql;
+            this.getService = getService;
         }
 
         [HttpGet("album/{urlName}")]
         public async Task<AlbumData?> GetAlbumData(string urlName)
         {
             var name = urlName.Replace("+", " ");
-            var album = await sql.GetAlbum(name);
-            if (album == null) return null;
-            var photosAsync = sql.GetPhotosInAlbum(album.id);
-            var usersAsync = sql.GetUsersForAlbum(album.id);            
-            return new AlbumData(album, await photosAsync, await usersAsync);
+            return await getService.GetAlbum(name);
         }
 
         [HttpGet("photosByUser/{userId}")]
-        public async Task<List<Photo>> GetPhotosByUser(int userId)
+        public async Task<IEnumerable<PhotoData>> GetPhotosByUser(int userId)
         {
-            return await sql.GetPhotosByUser(userId);
+            return await getService.GetPhotosByUser(userId);
         }
 
         [HttpGet("albumList")]
-        public async Task<IEnumerable<AlbumListData>> GetAlbumList()
+        public async Task<IEnumerable<AlbumListData>> GetAlbums()
         {
-            var albums_async = sql.GetAllAlbums();
-            var counts = await sql.GetAlbumCounts();
-            var albums = await albums_async;
-            return albums.Select(a =>
-                new AlbumListData(a.name, a.year, a.month, counts[a.id])
-            );
+            return await getService.GetAlbums();
+        }
+
+        [HttpGet("voteLevel")]
+        public async Task<int?> GetVoteLevel(int userId, int photoId)
+        {
+            return await getService.GetVoteLevel(userId, photoId);
         }
 
         [HttpGet("album")]
         public async Task<IEnumerable<Album>> GetAllAlbums()
         {
-            return await sql.GetAllAlbums();
+            return await getService.GetAllAlbums();
         }
 
         [HttpGet("user")]
         public async Task<IEnumerable<User>> GetAllUsers()
         {
-            return await sql.GetAllUsers();
+            return await getService.GetAllUsers();
         }
     }
 }

@@ -10,6 +10,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddSingleton<SqlService>();
 builder.Services.AddSingleton<PostService>();
+builder.Services.AddSingleton<GetService>();
 builder.Services.AddSingleton<ThumbnailService>();
 
 var app = builder.Build();

@@ -83,10 +83,21 @@ namespace photo_bot_back_end.Sql
             var url = reader.GetString(1);
             var albumId = reader.GetInt32(2);
             var userId = reader.GetInt32(3);
-            var score = reader.GetInt32(4);
-            var uploadTime = reader.SafeGetString(5);
-            var caption = reader.SafeGetString(6);
-            return new Photo(id, url, albumId, userId, score, uploadTime, caption);
+            var uploadTime = reader.SafeGetString(4);
+            var caption = reader.SafeGetString(5);
+            return new Photo(id, url, albumId, userId, uploadTime, caption);
+        }
+
+        public PhotoData ReadPhotoData()
+        {
+            var id = reader.GetInt32(0);
+            var url = reader.GetString(1);
+            var albumId = reader.GetInt32(2);
+            var userId = reader.GetInt32(3);
+            var uploadTime = reader.SafeGetString(4);
+            var caption = reader.SafeGetString(5);
+            var score = reader.GetInt32(6);
+            return new PhotoData(id, url, albumId, userId, uploadTime, caption, score);
         }
 
         public User ReadUser()
@@ -96,6 +107,14 @@ namespace photo_bot_back_end.Sql
             var name = reader.GetString(2);
             var level = reader.GetInt32(3);
             return new User(id, discordId, name, level);
+        }
+
+        public Vote ReadVote()
+        {
+            var userId = reader.GetInt32(0);
+            var photoId = reader.GetInt32(1);
+            var level = reader.GetInt32(2);
+            return new Vote(userId, photoId, level);
         }
 
         public UserInAlbum ReadUserInAlbum()

@@ -1,6 +1,7 @@
 
 namespace photo_bot_back_end
 {
+
     public record PhotoPost(string url, string channelId, string uploaderId, string uploadTime, string caption);
 
     public record AlbumPost(string channelId, string name, List<string> members);
@@ -11,7 +12,15 @@ namespace photo_bot_back_end
 
 
 
-    public record Photo(int id, string url, int albumId, int userId, int score, string uploadTime, string caption);
+    public record AlbumListData(string name, int year, int month, int numberOfPhotos);
+
+    public record AlbumData(string name, int year, int month, List<PhotoData> photos, List<int> usersInAlbum);
+
+    public record PhotoData(int id, string url, int albumId, int userId, string uploadTime, string caption, int score);
+
+
+
+    public record Photo(int id, string url, int albumId, int userId, string uploadTime, string caption);
 
     public record Album(int id, string channelId, string name, int year, int month);
 
@@ -19,9 +28,7 @@ namespace photo_bot_back_end
 
     public record UserInAlbum(int userId, int albumId);
 
-    public record UserDownVotesPhoto(int userId, int photoId);
-
-    public record UserUpVotesPhoto(int userId, int photoId);
+    public record Vote(int userId, int photoId, int level);
 
     public record UserInPhoto(int userId, int photoId);
 }
