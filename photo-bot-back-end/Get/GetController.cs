@@ -23,10 +23,8 @@ namespace photo_bot_back_end.Misc
         [HttpGet("album/{urlName}")]
         public async Task<AlbumData?> GetAlbumData(string urlName)
         {
-            var underscoreLastIndex = urlName.LastIndexOf("_");
-            var name = urlName[0..underscoreLastIndex].Replace("_", " ");
-            var year = int.Parse(urlName[(underscoreLastIndex+1)..]);
-            var album = await sql.GetAlbum(name, year);
+            var name = urlName.Replace("+", " ");
+            var album = await sql.GetAlbum(name);
             if (album == null) return null;
             var photosAsync = sql.GetPhotosInAlbum(album.id);
             var usersAsync = sql.GetUsersForAlbum(album.id);            
