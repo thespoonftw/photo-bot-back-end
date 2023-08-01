@@ -25,13 +25,13 @@ namespace photo_bot_back_end.Post
             if (existingPhoto == null)
             {
                 var id = await sql.GetNextPhotoIdAsync();
-                var photo = new Photo(id, photoPost.url, albumId, userId, photoPost.uploadTime, photoPost.caption);
+                var photo = new Photo(id, photoPost.url, albumId, userId, 0, photoPost.uploadTime, photoPost.caption);
                 await sql.MergeItem(photo);
                 thumbnails.SaveThumbnail(id, photoPost.url);
             }
             else
             {
-                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId, userId, photoPost.uploadTime, photoPost.caption);
+                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId, userId, existingPhoto.score, photoPost.uploadTime, photoPost.caption);
                 await sql.MergeItem(photo);
             }
         }
@@ -58,6 +58,7 @@ namespace photo_bot_back_end.Post
         public async Task PostVote(Vote vote)
         {
             await sql.MergeItem(vote);
+            await sql.UpdateScore(vote.photoId);
         }
         
         public async Task<int> GetOrCreateUserId(string discordId)

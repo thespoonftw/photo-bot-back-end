@@ -23,7 +23,7 @@ namespace photo_bot_back_end.Misc
         }
 
         [HttpGet("photosByUser/{userId}")]
-        public async Task<IEnumerable<PhotoData>> GetPhotosByUser(int userId)
+        public async Task<IEnumerable<Photo>> GetPhotosByUser(int userId)
         {
             return await getService.GetPhotosByUser(userId);
         }

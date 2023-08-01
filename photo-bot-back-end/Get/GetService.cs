@@ -18,7 +18,7 @@ namespace photo_bot_back_end.Post
         {
             var album = await sql.GetAlbum(albumName);
             if (album == null) { return null; }
-            var photosAsync = sql.GetPhotosForAlbum(album.id);
+            var photosAsync = sql.GetPhotosInAlbum(album.id);
             var usersAsync = sql.GetUsersForAlbum(album.id);
             return new AlbumData(album.name, album.year, album.month, await photosAsync, await usersAsync);
         }
@@ -50,7 +50,7 @@ namespace photo_bot_back_end.Post
             return await sql.GetAllAlbums();
         }
 
-        public async Task<IEnumerable<PhotoData>> GetPhotosByUser(int userId)
+        public async Task<IEnumerable<Photo>> GetPhotosByUser(int userId)
         {
             return await sql.GetPhotosByUser(userId);
         }

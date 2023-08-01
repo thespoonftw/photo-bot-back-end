@@ -183,38 +183,13 @@ namespace photo_bot_back_end.Sql
             return returner;
         }
 
-        public async Task<List<PhotoData>> GetPhotosByUser(int userId)
+        public async Task<List<Photo>> GetPhotosByUser(int userId)
         {
-            var returner = new List<PhotoData>();
-            using var sql = await SqlConnection.Query($@"
-                SELECT p.*, COALESCE(SUM(v.level), 0) AS score
-                FROM photo p
-                LEFT JOIN vote v ON p.id = v.photoId
-                WHERE p.userId = {userId}
-                GROUP BY p.id, p.url, p.albumId, p.userId, p.uploadTime, p.caption
-            ");
-
+            var returner = new List<Photo>();
+            using var sql = await SqlConnection.Query($"SELECT * FROM photo WHERE userId={userId}");
             while (sql.Next())
             {
-                returner.Add(sql.ReadPhotoData());
-            }
-            return returner;
-        }
-
-        public async Task<List<PhotoData>> GetPhotosForAlbum(int albumId)
-        {
-            var returner = new List<PhotoData>();
-            using var sql = await SqlConnection.Query($@"
-                SELECT p.*, COALESCE(SUM(v.level), 0) AS score
-                FROM photo p
-                LEFT JOIN vote v ON p.id = v.photoId
-                WHERE p.albumId = {albumId}
-                GROUP BY p.id, p.url, p.albumId, p.userId, p.uploadTime, p.caption
-            ");
-
-            while (sql.Next())
-            {
-                returner.Add(sql.ReadPhotoData());
+                returner.Add(sql.ReadPhoto());
             }
             return returner;
         }
@@ -239,6 +214,19 @@ namespace photo_bot_back_end.Sql
                 returner.Add(sql.ReadUserInAlbum().userId);
             }
             return returner;
+        }
+
+        public async Task UpdateScore(int photoId)
+        {
+            await SqlConnection.NonQuery($@"
+                UPDATE photo AS p
+                SET p.score = (
+                    SELECT SUM(level)
+                    FROM vote AS v
+                    WHERE v.photoId = p.id
+                )
+                WHERE p.id = {photoId};
+            ");
         }
 
         public async Task RemoveAllUsersForAlbum(int albumId)
