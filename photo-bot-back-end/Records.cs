@@ -2,7 +2,7 @@
 namespace photo_bot_back_end
 {
 
-    public record PhotoPost(string url, string channelId, string uploaderId, string uploadTime, string caption);
+    public record PhotoPost(string url, string channelId, string uploaderId, string uploadTime, string caption, string messageId);
 
     public record AlbumPost(string channelId, string name, List<string> members);
 
@@ -19,7 +19,7 @@ namespace photo_bot_back_end
     public record PhotosData(string shareUrl, List<Photo> photos);
 
 
-    public record Photo(int id, string url, int albumId, int userId, int score, string uploadTime, string caption);
+    public record Photo(int id, string url, int albumId, int userId, int score, string uploadTime, string caption, string messageId);
 
     public record Album(int id, string channelId, string name, int year, int month);
 

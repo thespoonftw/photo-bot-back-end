@@ -86,7 +86,8 @@ namespace photo_bot_back_end.Sql
             var score = reader.GetInt32(4);
             var uploadTime = reader.SafeGetString(5);
             var caption = reader.SafeGetString(6);
-            return new Photo(id, url, albumId, userId, score, uploadTime, caption);
+            var messageId = reader.SafeGetString(7);
+            return new Photo(id, url, albumId, userId, score, uploadTime, caption, messageId);
         }
 
         public User ReadUser()
