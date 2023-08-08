@@ -15,15 +15,14 @@ namespace photo_bot_back_end.Misc
             this.getService = getService;
         }
 
-        [HttpGet("album/{urlName}")]
-        public async Task<AlbumData?> GetAlbumData(string urlName)
+        [HttpGet("album/{url}")]
+        public async Task<AlbumData?> GetAlbumData(string url)
         {
-            var name = urlName.Replace("+", " ");
-            return await getService.GetAlbum(name);
+            return await getService.GetAlbumForUrl(url);
         }
 
         [HttpGet("photosByUser/{userId}")]
-        public async Task<IEnumerable<Photo>> GetPhotosByUser(int userId)
+        public async Task<PhotosData> GetPhotosByUser(int userId)
         {
             return await getService.GetPhotosByUser(userId);
         }

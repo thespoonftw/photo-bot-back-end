@@ -12,10 +12,11 @@ namespace photo_bot_back_end
 
 
 
-    public record AlbumListData(string name, int year, int month, int numberOfPhotos);
+    public record AlbumListData(string id, string name, int year, int month, int numberOfPhotos);
 
     public record AlbumData(string name, int year, int month, List<Photo> photos, List<int> usersInAlbum);
 
+    public record PhotosData(string shareUrl, List<Photo> photos);
 
 
     public record Photo(int id, string url, int albumId, int userId, int score, string uploadTime, string caption);

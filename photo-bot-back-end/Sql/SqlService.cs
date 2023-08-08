@@ -61,9 +61,9 @@ namespace photo_bot_back_end.Sql
             await SqlConnection.NonQuery(query);
         }
 
-        public async Task<Album?> GetAlbum(string name)
+        public async Task<Album?> GetAlbum(int id)
         {
-            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE name='{name}'");
+            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE id='{id}'");
             if (!sql.Next())
             {
                 return null;

@@ -14,10 +14,15 @@ namespace photo_bot_back_end.Post
             this.sql = sql;
         }
 
-        public async Task<AlbumData?> GetAlbum(string albumName)
+        public async Task<AlbumData?> GetAlbumForUrl(string url)
         {
-            var album = await sql.GetAlbum(albumName);
+            var decrypt = Encryptor.Decrypt(url);
+            var isSuccess = int.TryParse(decrypt, out int id);
+            if (!isSuccess) { return null; }
+
+            var album = await sql.GetAlbum(id);
             if (album == null) { return null; }
+
             var photosAsync = sql.GetPhotosInAlbum(album.id);
             var usersAsync = sql.GetUsersForAlbum(album.id);
             return new AlbumData(album.name, album.year, album.month, await photosAsync, await usersAsync);
@@ -29,7 +34,7 @@ namespace photo_bot_back_end.Post
             var counts = await sql.GetAlbumCounts();
             var albums = await albums_async;
             return albums.Select(a =>
-                new AlbumListData(a.name, a.year, a.month, counts[a.id])
+                new AlbumListData(Encryptor.Encrypt(a.id.ToString()), a.name, a.year, a.month, counts[a.id])
             );
         }
 
@@ -50,9 +55,11 @@ namespace photo_bot_back_end.Post
             return await sql.GetAllAlbums();
         }
 
-        public async Task<IEnumerable<Photo>> GetPhotosByUser(int userId)
+        public async Task<PhotosData> GetPhotosByUser(int userId)
         {
-            return await sql.GetPhotosByUser(userId);
+            var photos = sql.GetPhotosByUser(userId);
+            var url = Encryptor.Encrypt($"u={userId}");
+            return new PhotosData(url, await photos);
         }
 
 
