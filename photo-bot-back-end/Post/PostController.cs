@@ -30,14 +30,14 @@ namespace photo_bot_back_end.Post
         }
 
         [HttpPost("album")]
-        public async Task PostAlbum()
+        public async Task<AlbumResponse?> PostAlbum()
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Post album: {Body}", body);
             var postAlbum = JsonSerializer.Deserialize<AlbumPost>(body);
-            if (postAlbum == null) { return; }
+            if (postAlbum == null) { return null; }
 
-            await postService.PostAlbum(postAlbum);
+            return await postService.PostAlbum(postAlbum);
         }
 
         [HttpPost("vote")]

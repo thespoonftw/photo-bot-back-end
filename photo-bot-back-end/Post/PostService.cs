@@ -1,4 +1,5 @@
-﻿using photo_bot_back_end.Misc;
+﻿using photo_bot_back_end;
+using photo_bot_back_end.Misc;
 using photo_bot_back_end.Sql;
 
 namespace photo_bot_back_end.Post
@@ -36,23 +37,14 @@ namespace photo_bot_back_end.Post
             }
         }
 
-        public async Task PostAlbum(AlbumPost albumPost)
+        public async Task<AlbumResponse> PostAlbum(AlbumPost albumPost)
         {
-            var existingAlbum = await sql.GetAlbumFromChannelId(albumPost.channelId);
-            if (existingAlbum == null)
-            {
-                var id = await sql.GetNextAlbumId();
-                var album = new Album(id, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
-                await sql.MergeItem(album);
-                await CreateUsersInAlbum(id, albumPost.members);
-            }
-            else
-            {
-                var newName = albumPost.name != "" ? albumPost.name : existingAlbum.name;
-                var album = new Album(existingAlbum.id, existingAlbum.channelId, newName, existingAlbum.year, existingAlbum.month);
-                await sql.MergeItem(album);
-                await CreateUsersInAlbum(existingAlbum.id, albumPost.members);
-            }
+            var album = await GetOrCreateAlbum(albumPost);
+            await sql.MergeItem(album);
+            await CreateUsersInAlbum(album.id, albumPost.members);
+            var encryptedId = Encryptor.Encrypt(album.id.ToString());
+            var url = $"http://www.brunch-projects.co.uk/album/{encryptedId}";
+            return new AlbumResponse(url);
         }
 
         public async Task PostVote(Vote vote)
@@ -105,13 +97,32 @@ namespace photo_bot_back_end.Post
         private async Task<HttpResponseMessage> DeletePhoto(Photo? photo, User? user)
         {
             if (photo == null)
+            {
                 return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+            }
 
             if (user == null || photo.userId != user.id)
+            {
                 return new HttpResponseMessage(System.Net.HttpStatusCode.Forbidden);
+            }
 
             await sql.DeletePhoto(photo.id);
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        }
+
+        private async Task<Album> GetOrCreateAlbum(AlbumPost albumPost)
+        {
+            var existingAlbum = await sql.GetAlbumFromChannelId(albumPost.channelId);
+            if (existingAlbum == null)
+            {
+                var id = await sql.GetNextAlbumId();
+                return new Album(id, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
+            }
+            else
+            {
+                var newName = albumPost.name != "" ? albumPost.name : existingAlbum.name;
+                return new Album(existingAlbum.id, existingAlbum.channelId, newName, existingAlbum.year, existingAlbum.month);
+            }
         }
     }
 }
