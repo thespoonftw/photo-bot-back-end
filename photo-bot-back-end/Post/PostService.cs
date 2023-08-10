@@ -17,7 +17,7 @@ namespace photo_bot_back_end.Post
             this.thumbnails = thumbnails;
         }
 
-        public async Task PostPhoto(PhotoPost photoPost)
+        public async Task PostPhoto(PostPhoto photoPost)
         {
             var albumId = await sql.GetAlbumId(photoPost.channelId);
             var userId = await GetOrCreateUserId(photoPost.uploaderId);
@@ -37,14 +37,14 @@ namespace photo_bot_back_end.Post
             }
         }
 
-        public async Task<AlbumResponse> PostAlbum(AlbumPost albumPost)
+        public async Task<ReplyAlbumUrl> PostAlbum(PostAlbum albumPost)
         {
             var album = await GetOrCreateAlbum(albumPost);
             await sql.MergeItem(album);
             await CreateUsersInAlbum(album.id, albumPost.members);
             var encryptedId = Encryptor.Encrypt(album.id.ToString());
             var url = $"http://www.brunch-projects.co.uk/album/{encryptedId}";
-            return new AlbumResponse(url);
+            return new ReplyAlbumUrl(url);
         }
 
         public async Task PostVote(Vote vote)
@@ -63,7 +63,7 @@ namespace photo_bot_back_end.Post
             }
 
             var newId = await sql.GetNextUserId();
-            var user = new User(newId, discordId, "New User", 0);
+            var user = new User(newId, discordId, "New User", 0, string.Empty);
             await sql.MergeItem(user);
             return newId;
         }
@@ -79,7 +79,12 @@ namespace photo_bot_back_end.Post
             }
         }
 
-        public async Task<HttpResponseMessage> DeletePhotoById(PhotoDeleteById photoDelete)
+        public async Task TrashPhotoById(int photoId)
+        {
+            await sql.MovePhotoToAlbum(photoId, 0);
+        }
+
+        public async Task<HttpResponseMessage> DeletePhotoById(DeletePhotoById photoDelete)
         {
             var getPhoto = sql.GetPhoto(photoDelete.photoId);
             var getUser = sql.GetUserFromDiscordId(photoDelete.requesterId);
@@ -87,21 +92,35 @@ namespace photo_bot_back_end.Post
             
         }
 
-        public async Task<HttpResponseMessage> DeletePhotoByUrl(PhotoDeleteByUrl photoDelete)
+        public async Task<HttpResponseMessage> DeletePhotoByUrl(DeletePhotoByUrl photoDelete)
         {
             var getPhoto = sql.GetPhotoFromUrl(photoDelete.url);
             var getUser = sql.GetUserFromDiscordId(photoDelete.requesterId);
             return await DeletePhoto(await getPhoto, await getUser);
         }
 
+        public async Task<HttpResponseMessage> DeletePhoto(DeletePhoto photoDelete)
+        {
+            var getPhoto = sql.GetPhoto(photoDelete.photoId);
+            var getUser = sql.GetUser(photoDelete.userId);
+            return await DeletePhoto(await getPhoto, await getUser);
+        }
+
+        public async Task<ReplyLogin> VerifyLogin(PostLogin post)
+        {
+            var user = await sql.GetUser(post.userId);
+            if (user == null) { return new ReplyLogin(false); }
+            return new ReplyLogin(user.username == post.password);
+        }
+
         private async Task<HttpResponseMessage> DeletePhoto(Photo? photo, User? user)
         {
-            if (photo == null)
+            if (photo == null || user == null)
             {
                 return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
             }
 
-            if (user == null || photo.userId != user.id)
+            if (photo.userId != user.id && user.level <= 1)
             {
                 return new HttpResponseMessage(System.Net.HttpStatusCode.Forbidden);
             }
@@ -110,7 +129,7 @@ namespace photo_bot_back_end.Post
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
         }
 
-        private async Task<Album> GetOrCreateAlbum(AlbumPost albumPost)
+        private async Task<Album> GetOrCreateAlbum(PostAlbum albumPost)
         {
             var existingAlbum = await sql.GetAlbumFromChannelId(albumPost.channelId);
             if (existingAlbum == null)

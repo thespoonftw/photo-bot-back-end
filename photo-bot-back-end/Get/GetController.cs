@@ -16,19 +16,25 @@ namespace photo_bot_back_end.Misc
         }
 
         [HttpGet("album/{url}")]
-        public async Task<AlbumData?> GetAlbumData(string url)
+        public async Task<ReplyAlbum?> GetAlbumData(string url)
         {
             return await getService.GetAlbumForUrl(url);
         }
 
         [HttpGet("photosByUser/{userId}")]
-        public async Task<PhotosData> GetPhotosByUser(int userId)
+        public async Task<ReplyPhotos> GetPhotosByUser(int userId)
         {
             return await getService.GetPhotosByUser(userId);
         }
 
-        [HttpGet("albumList")]
-        public async Task<IEnumerable<AlbumListData>> GetAlbums()
+        [HttpGet("trash")]
+        public async Task<ReplyPhotos> GetTrash()
+        {
+            return await getService.GetTrashPhotos();
+        }
+
+[HttpGet("albumList")]
+        public async Task<IEnumerable<ReplyAlbumDirectory>> GetAlbums()
         {
             return await getService.GetAlbums();
         }

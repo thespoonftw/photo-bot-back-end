@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using photo_bot_back_end;
-using photo_bot_back_end.Misc;
-using photo_bot_back_end.Sql;
 using System.Text.Json;
 
 namespace photo_bot_back_end.Post
@@ -23,18 +20,18 @@ namespace photo_bot_back_end.Post
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Post photo: {Body}", body);
-            var postPhoto = JsonSerializer.Deserialize<PhotoPost>(body);
+            var postPhoto = JsonSerializer.Deserialize<PostPhoto>(body);
             if (postPhoto == null) { return; }
 
             await postService.PostPhoto(postPhoto);
         }
 
         [HttpPost("album")]
-        public async Task<AlbumResponse?> PostAlbum()
+        public async Task<ReplyAlbumUrl?> PostAlbum()
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Post album: {Body}", body);
-            var postAlbum = JsonSerializer.Deserialize<AlbumPost>(body);
+            var postAlbum = JsonSerializer.Deserialize<PostAlbum>(body);
             if (postAlbum == null) { return null; }
 
             return await postService.PostAlbum(postAlbum);
@@ -51,11 +48,11 @@ namespace photo_bot_back_end.Post
         }
 
         [HttpPost("delete_photo_by_id")]
-        public async Task<HttpResponseMessage> DeletePhotoById()
+        public async Task<HttpResponseMessage> DeletePhotoByDiscordId()
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Delete photo: {Body}", body);
-            var deletePhoto = JsonSerializer.Deserialize<PhotoDeleteById>(body);
+            var deletePhoto = JsonSerializer.Deserialize<DeletePhotoById>(body);
             if (deletePhoto == null) { return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest); }
 
             return await postService.DeletePhotoById(deletePhoto);
@@ -66,10 +63,40 @@ namespace photo_bot_back_end.Post
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Delete photo: {Body}", body);
-            var deletePhoto = JsonSerializer.Deserialize<PhotoDeleteByUrl>(body);
+            var deletePhoto = JsonSerializer.Deserialize<DeletePhotoByUrl>(body);
             if (deletePhoto == null) { return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest); }
 
             return await postService.DeletePhotoByUrl(deletePhoto);
+        }
+
+        [HttpPost("delete_photo")]
+        public async Task<HttpResponseMessage> DeletePhoto()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Delete photo: {Body}", body);
+            var deletePhoto = JsonSerializer.Deserialize<DeletePhoto>(body);
+            if (deletePhoto == null) { return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest); }
+
+            return await postService.DeletePhoto(deletePhoto);
+        }
+
+        [HttpPost("login")]
+        public async Task<ReplyLogin> Login()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Login Attempt: {Body}", body);
+            var login = JsonSerializer.Deserialize<PostLogin>(body);
+            if (login == null) { return new ReplyLogin(false); }
+
+            return await postService.VerifyLogin(login);
+        }
+
+        [HttpPost("trash/{photoId}")]
+        public async Task TrashPhoto(string photoId)
+        {
+            var success = int.TryParse(photoId, out int id);
+            if (success == false) { return; }
+            await postService.TrashPhotoById(id);
         }
     }
 }

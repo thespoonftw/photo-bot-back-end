@@ -238,5 +238,14 @@ namespace photo_bot_back_end.Sql
         {
             await SqlConnection.NonQuery($"DELETE FROM photo WHERE id={id}");
         }
+
+        public async Task MovePhotoToAlbum(int photoId, int albumId)
+        {
+            await SqlConnection.NonQuery($@"
+                UPDATE photo
+                SET albumId = {albumId}
+                WHERE id = {photoId};
+            ");
+        }
     }
 }

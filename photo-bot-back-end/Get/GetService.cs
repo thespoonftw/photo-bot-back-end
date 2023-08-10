@@ -14,7 +14,7 @@ namespace photo_bot_back_end.Post
             this.sql = sql;
         }
 
-        public async Task<AlbumData?> GetAlbumForUrl(string url)
+        public async Task<ReplyAlbum?> GetAlbumForUrl(string url)
         {
             var decrypt = Encryptor.Decrypt(url);
             var isSuccess = int.TryParse(decrypt, out int id);
@@ -25,16 +25,16 @@ namespace photo_bot_back_end.Post
 
             var photosAsync = sql.GetPhotosInAlbum(album.id);
             var usersAsync = sql.GetUsersForAlbum(album.id);
-            return new AlbumData(album.name, album.year, album.month, await photosAsync, await usersAsync);
+            return new ReplyAlbum(album.name, album.year, album.month, await photosAsync, await usersAsync);
         }
 
-        public async Task<IEnumerable<AlbumListData>> GetAlbums()
+        public async Task<IEnumerable<ReplyAlbumDirectory>> GetAlbums()
         {
             var albums_async = sql.GetAllAlbums();
             var counts = await sql.GetAlbumCounts();
             var albums = await albums_async;
             return albums.Select(a =>
-                new AlbumListData(Encryptor.Encrypt(a.id.ToString()), a.name, a.year, a.month, counts[a.id])
+                new ReplyAlbumDirectory(Encryptor.Encrypt(a.id.ToString()), a.name, a.year, a.month, counts[a.id])
             );
         }
 
@@ -55,11 +55,18 @@ namespace photo_bot_back_end.Post
             return await sql.GetAllAlbums();
         }
 
-        public async Task<PhotosData> GetPhotosByUser(int userId)
+        public async Task<ReplyPhotos> GetPhotosByUser(int userId)
         {
             var photos = sql.GetPhotosByUser(userId);
             var url = Encryptor.Encrypt($"u={userId}");
-            return new PhotosData(url, await photos);
+            return new ReplyPhotos(url, await photos);
+        }
+
+        public async Task<ReplyPhotos> GetTrashPhotos()
+        {
+            // TODO combine with search functionality
+            var photos = await sql.GetPhotosInAlbum(0);
+            return new ReplyPhotos("", photos);
         }
 
 

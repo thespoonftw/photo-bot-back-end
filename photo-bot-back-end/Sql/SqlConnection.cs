@@ -96,7 +96,8 @@ namespace photo_bot_back_end.Sql
             var discordId = reader.SafeGetString(1);
             var name = reader.GetString(2);
             var level = reader.GetInt32(3);
-            return new User(id, discordId, name, level);
+            var username = reader.SafeGetString(4);
+            return new User(id, discordId, name, level, username);
         }
 
         public Vote ReadVote()
