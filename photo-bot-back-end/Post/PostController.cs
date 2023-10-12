@@ -98,5 +98,16 @@ namespace photo_bot_back_end.Post
             if (success == false) { return; }
             await postService.TrashPhotoById(id);
         }
+
+        [HttpPost("album_date")]
+        public async Task PostAlbumDate()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Album Date: {Body}", body);
+            var albumDate = JsonSerializer.Deserialize<PostAlbumDate>(body);
+            if (albumDate == null) { return; }
+
+            await postService.PostAlbumDate(albumDate);
+        }
     }
 }

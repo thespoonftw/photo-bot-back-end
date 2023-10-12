@@ -25,7 +25,7 @@ namespace photo_bot_back_end.Post
 
             var photosAsync = sql.GetPhotosInAlbum(album.id);
             var usersAsync = sql.GetUsersForAlbum(album.id);
-            return new ReplyAlbum(album.name, album.year, album.month, await photosAsync, await usersAsync);
+            return new ReplyAlbum(album.id, album.name, album.year, album.month, await photosAsync, await usersAsync);
         }
 
         public async Task<IEnumerable<ReplyAlbumDirectory>> GetAlbums()

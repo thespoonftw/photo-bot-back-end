@@ -9,6 +9,9 @@ namespace photo_bot_back_end
     public record PostLogin(int userId, string password);
 
 
+    public record PostAlbumDate(int albumId, int year, int month);
+
+
     public record DeletePhotoById(int photoId, string requesterId);
 
     public record DeletePhotoByUrl(string url, string requesterId);
@@ -20,7 +23,7 @@ namespace photo_bot_back_end
 
     public record ReplyAlbumDirectory(string id, string name, int year, int month, int numberOfPhotos);
 
-    public record ReplyAlbum(string name, int year, int month, List<Photo> photos, List<int> usersInAlbum);
+    public record ReplyAlbum(int id, string name, int year, int month, List<Photo> photos, List<int> usersInAlbum);
 
     public record ReplyPhotos(string shareUrl, List<Photo> photos);
 

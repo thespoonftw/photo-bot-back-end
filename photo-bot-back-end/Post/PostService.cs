@@ -47,6 +47,15 @@ namespace photo_bot_back_end.Post
             return new ReplyAlbumUrl(url);
         }
 
+        public async Task PostAlbumDate(PostAlbumDate datePost)
+        {
+            var album = await sql.GetAlbum(datePost.albumId);
+            if (album == null) { return; }
+
+            var newAlbum = new Album(album.id, album.channelId, album.name, datePost.year, datePost.month);
+            await sql.MergeItem(newAlbum);
+        }
+
         public async Task PostVote(Vote vote)
         {
             await sql.MergeItem(vote);
