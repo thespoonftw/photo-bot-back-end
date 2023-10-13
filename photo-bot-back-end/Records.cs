@@ -11,6 +11,8 @@ namespace photo_bot_back_end
 
     public record PostAlbumDate(int albumId, int year, int month);
 
+    public record PostAlbumUsers(int albumId, List<int> users);
+
 
     public record DeletePhotoById(int photoId, string requesterId);
 

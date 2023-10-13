@@ -85,10 +85,10 @@ namespace photo_bot_back_end.Post
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Login Attempt: {Body}", body);
-            var login = JsonSerializer.Deserialize<PostLogin>(body);
-            if (login == null) { return new ReplyLogin(false); }
+            var post = JsonSerializer.Deserialize<PostLogin>(body);
+            if (post == null) { return new ReplyLogin(false); }
 
-            return await postService.VerifyLogin(login);
+            return await postService.VerifyLogin(post);
         }
 
         [HttpPost("trash/{photoId}")]
@@ -104,10 +104,21 @@ namespace photo_bot_back_end.Post
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
             logger.LogInformation("Album Date: {Body}", body);
-            var albumDate = JsonSerializer.Deserialize<PostAlbumDate>(body);
-            if (albumDate == null) { return; }
+            var post = JsonSerializer.Deserialize<PostAlbumDate>(body);
+            if (post == null) { return; }
 
-            await postService.PostAlbumDate(albumDate);
+            await postService.PostAlbumDate(post);
+        }
+
+        [HttpPost("album_users")]
+        public async Task PostAlbumUsers()
+        {
+            var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            logger.LogInformation("Album Users: {Body}", body);
+            var post = JsonSerializer.Deserialize<PostAlbumUsers>(body);
+            if (post == null) { return; }
+
+            await postService.PostAlbumUsers(post);
         }
     }
 }

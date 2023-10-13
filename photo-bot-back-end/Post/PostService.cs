@@ -41,7 +41,8 @@ namespace photo_bot_back_end.Post
         {
             var album = await GetOrCreateAlbum(albumPost);
             await sql.MergeItem(album);
-            await CreateUsersInAlbum(album.id, albumPost.members);
+            var userIds = await DiscordIdsToUserIds(albumPost.members);
+            await SetUsersInAlbum(album.id, userIds);
             var encryptedId = Encryptor.Encrypt(album.id.ToString());
             var url = $"http://www.brunch-projects.co.uk/album/{encryptedId}";
             return new ReplyAlbumUrl(url);
@@ -54,6 +55,11 @@ namespace photo_bot_back_end.Post
 
             var newAlbum = new Album(album.id, album.channelId, album.name, datePost.year, datePost.month);
             await sql.MergeItem(newAlbum);
+        }
+
+        public async Task PostAlbumUsers(PostAlbumUsers usersPost)
+        {
+            await SetUsersInAlbum(usersPost.albumId, usersPost.users);
         }
 
         public async Task PostVote(Vote vote)
@@ -77,13 +83,12 @@ namespace photo_bot_back_end.Post
             return newId;
         }
 
-        public async Task CreateUsersInAlbum(int albumId, List<string> participantIds)
+        public async Task SetUsersInAlbum(int albumId, List<int> userIds)
         {
             await sql.RemoveAllUsersForAlbum(albumId);
 
-            foreach (var discordId in participantIds)
+            foreach (var userId in userIds)
             {
-                var userId = await GetOrCreateUserId(discordId);
                 await sql.MergeItem(new UserInAlbum(userId, albumId));
             }
         }
@@ -151,6 +156,17 @@ namespace photo_bot_back_end.Post
                 var newName = albumPost.name != "" ? albumPost.name : existingAlbum.name;
                 return new Album(existingAlbum.id, existingAlbum.channelId, newName, existingAlbum.year, existingAlbum.month);
             }
+        }
+
+        private async Task<List<int>> DiscordIdsToUserIds(List<string> discordIds)
+        {
+            var returner = new List<int>();
+            foreach (var discordId in discordIds)
+            {
+                var userId = await GetOrCreateUserId(discordId);
+                returner.Add(userId);
+            }
+            return returner;
         }
     }
 }
