@@ -62,10 +62,19 @@ namespace photo_bot_back_end.Post
             await SetUsersInAlbum(usersPost.albumId, usersPost.users);
         }
 
-        public async Task PostVote(Vote vote)
+        public async Task PostReact(PostReact reactPost)
         {
-            await sql.MergeItem(vote);
-            await sql.UpdateScore(vote.photoId);
+            if (reactPost.level != null)
+            {
+                var react = new React(reactPost.userId, reactPost.photoId, (int)reactPost.level);
+                await sql.MergeItem(react);
+            }
+            else
+            {
+                await sql.DeleteReact(reactPost.userId, reactPost.photoId);
+            }
+
+            await sql.UpdateScore(reactPost.photoId);
         }
         
         public async Task<int> GetOrCreateUserId(string discordId)

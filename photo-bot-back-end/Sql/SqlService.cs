@@ -91,14 +91,14 @@ namespace photo_bot_back_end.Sql
             return sql.ReadUser();
         }
 
-        public async Task<Vote?> GetVote(int userId, int photoId)
+        public async Task<React?> GetReact(int userId, int photoId)
         {
-            using var sql = await SqlConnection.Query($"SELECT * FROM vote WHERE userId='{userId}' AND photoId='{photoId}'");
+            using var sql = await SqlConnection.Query($"SELECT * FROM react WHERE userId='{userId}' AND photoId='{photoId}'");
             if (!sql.Next())
             {
                 return null;
             }
-            return sql.ReadVote();
+            return sql.ReadReact();
         }
 
         public async Task<Album?> GetAlbumFromChannelId(string channelId)
@@ -218,12 +218,12 @@ namespace photo_bot_back_end.Sql
 
         public async Task UpdateScore(int photoId)
         {
+            // 3 is the score multiplier
             await SqlConnection.NonQuery($@"
                 UPDATE photo AS p
                 SET p.score = (
-                    SELECT SUM(level)
-                    FROM vote AS v
-                    WHERE v.photoId = p.id
+                    1 * (SELECT COUNT(*) FROM react AS v WHERE v.photoId = p.id AND v.level = 0) +
+                    3 * (SELECT COUNT(*) FROM react AS v WHERE v.photoId = p.id AND v.level = 1)
                 )
                 WHERE p.id = {photoId};
             ");
@@ -237,6 +237,11 @@ namespace photo_bot_back_end.Sql
         public async Task DeletePhoto(int id)
         {
             await SqlConnection.NonQuery($"DELETE FROM photo WHERE id={id}");
+        }
+
+        public async Task DeleteReact(int userId, int photoId)
+        {
+            await SqlConnection.NonQuery($"DELETE FROM react WHERE userid='{userId}' AND photoid='{photoId}'");
         }
 
         public async Task MovePhotoToAlbum(int photoId, int albumId)

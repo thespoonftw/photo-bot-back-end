@@ -8,6 +8,8 @@ namespace photo_bot_back_end
 
     public record PostLogin(int userId, string password);
 
+    public record PostReact(int userId, int photoId, int? level);
+
 
     public record PostAlbumDate(int albumId, int year, int month);
 
@@ -31,6 +33,8 @@ namespace photo_bot_back_end
 
     public record ReplyLogin(bool isSuccessful);
 
+    public record ReplyReactLevel(int? level);
+
 
     public record Photo(int id, string url, int albumId, int userId, int score, string uploadTime, string caption, string messageId);
 
@@ -40,7 +44,7 @@ namespace photo_bot_back_end
 
     public record UserInAlbum(int userId, int albumId);
 
-    public record Vote(int userId, int photoId, int level);
+    public record React(int userId, int photoId, int level);
 
     public record UserInPhoto(int userId, int photoId);
 }

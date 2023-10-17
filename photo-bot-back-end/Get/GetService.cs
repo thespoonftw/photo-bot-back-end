@@ -38,11 +38,10 @@ namespace photo_bot_back_end.Post
             );
         }
 
-        public async Task<int?> GetVoteLevel(int userId, int photoId)
+        public async Task<ReplyReactLevel> GetReactLevel(int userId, int photoId)
         {
-            var vote = await sql.GetVote(userId, photoId);
-            if (vote == null) { return 0; }
-            return vote.level;
+            var react = await sql.GetReact(userId, photoId);
+            return new ReplyReactLevel(react?.level);
         }
 
         public async Task<IEnumerable<User>> GetAllUsers()

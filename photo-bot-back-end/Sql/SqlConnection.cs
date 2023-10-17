@@ -100,12 +100,12 @@ namespace photo_bot_back_end.Sql
             return new User(id, discordId, name, level, username);
         }
 
-        public Vote ReadVote()
+        public React ReadReact()
         {
             var userId = reader.GetInt32(0);
             var photoId = reader.GetInt32(1);
             var level = reader.GetInt32(2);
-            return new Vote(userId, photoId, level);
+            return new React(userId, photoId, level);
         }
 
         public UserInAlbum ReadUserInAlbum()

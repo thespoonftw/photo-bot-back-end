@@ -33,16 +33,16 @@ namespace photo_bot_back_end.Misc
             return await getService.GetTrashPhotos();
         }
 
-[HttpGet("albumList")]
+        [HttpGet("albumList")]
         public async Task<IEnumerable<ReplyAlbumDirectory>> GetAlbums()
         {
             return await getService.GetAlbums();
         }
 
-        [HttpGet("voteLevel")]
-        public async Task<int?> GetVoteLevel(int userId, int photoId)
+        [HttpGet("react_level")]
+        public async Task<ReplyReactLevel> GetReactLevel(int userId, int photoId)
         {
-            return await getService.GetVoteLevel(userId, photoId);
+            return await getService.GetReactLevel(userId, photoId);
         }
 
         [HttpGet("album")]

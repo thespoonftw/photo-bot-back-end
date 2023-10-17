@@ -37,14 +37,14 @@ namespace photo_bot_back_end.Post
             return await postService.PostAlbum(postAlbum);
         }
 
-        [HttpPost("vote")]
-        public async Task Vote()
+        [HttpPost("react")]
+        public async Task React()
         {
             var body = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-            var postVote = JsonSerializer.Deserialize<Vote>(body);
+            var postVote = JsonSerializer.Deserialize<PostReact>(body);
             if (postVote == null) { return; }
 
-            await postService.PostVote(postVote);
+            await postService.PostReact(postVote);
         }
 
         [HttpPost("delete_photo_by_id")]
