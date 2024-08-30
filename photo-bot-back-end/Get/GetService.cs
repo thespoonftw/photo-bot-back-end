@@ -30,7 +30,7 @@ namespace photo_bot_back_end.Post
             var counts = await sql.GetAlbumCounts();
             var albums = await albums_async;
             return albums.Select(a =>
-                new ReplyAlbumDirectory(a.id, a.imgurId a.name, a.year, a.month, counts[a.id])
+                new ReplyAlbumDirectory(a.id, a.imgurId, a.name, a.year, a.month, counts[a.id])
             );
         }
 
