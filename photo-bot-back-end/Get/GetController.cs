@@ -15,10 +15,10 @@ namespace photo_bot_back_end.Misc
             this.getService = getService;
         }
 
-        [HttpGet("album/{url}")]
-        public async Task<ReplyAlbum?> GetAlbumData(string url)
+        [HttpGet("album/{imgurId}")]
+        public async Task<ReplyAlbum?> GetAlbumData(string imgurId)
         {
-            return await getService.GetAlbumForUrl(url);
+            return await getService.GetAlbumForImgurId(imgurId);
         }
 
         [HttpGet("photosByUser/{userId}")]

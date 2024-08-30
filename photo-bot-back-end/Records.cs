@@ -2,7 +2,7 @@
 namespace photo_bot_back_end
 {
 
-    public record PostPhoto(string url, string channelId, string uploaderId, string uploadTime, string caption, string messageId);
+    public record PostPhoto(string url, string channelId, string uploaderId, string uploadTime, string caption, string messageId, int messageIndex);
 
     public record PostAlbum(string channelId, string name, List<string> members);
 
@@ -25,7 +25,7 @@ namespace photo_bot_back_end
 
     public record ReplyAlbumUrl(string albumUrl);
 
-    public record ReplyAlbumDirectory(string id, string name, int year, int month, int numberOfPhotos);
+    public record ReplyAlbumDirectory(int id, string imgurId, string name, int year, int month, int numberOfPhotos);
 
     public record ReplyAlbum(int id, string name, int year, int month, List<Photo> photos, List<int> usersInAlbum);
 
@@ -36,9 +36,23 @@ namespace photo_bot_back_end
     public record ReplyReactLevel(int? level);
 
 
-    public record Photo(int id, string url, int albumId, int userId, int score, string uploadTime, string caption, string messageId);
+    public record Photo(
+        int id, 
+        string url, 
+        int albumId, 
+        int userId, 
+        int score, 
+        string uploadTime, 
+        string caption, 
+        string messageId, 
+        int messageIndex, 
+        string imgurId, 
+        string deleteHash,
+        string thumbnailId,
+        string thumbnailDeleteHash
+        );
 
-    public record Album(int id, string channelId, string name, int year, int month);
+    public record Album(int id, string imgurId, string channelId, string name, int year, int month);
 
     public record User(int id, string discordId, string name, int level, string username);
 
@@ -47,4 +61,13 @@ namespace photo_bot_back_end
     public record React(int userId, int photoId, int level);
 
     public record UserInPhoto(int userId, int photoId);
+
+
+    public record ImgurAlbum(string title, string description, string[] ids);
+
+    public record ImgurAlbumReply(string id, string deletehash);
+
+    public record ImgurUpload(string image, string type, string album);
+
+    public record ImgurUploadReply(string id, string link, string deletehash);
 }

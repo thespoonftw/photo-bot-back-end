@@ -8,43 +8,56 @@ namespace photo_bot_back_end.Post
     {
         private readonly ILogger<SqlService> logger;
         private readonly SqlService sql;
-        private readonly ThumbnailService thumbnails;
+        private readonly ImgurService imgur;
 
-        public PostService(ILogger<SqlService> logger, SqlService sql, ThumbnailService thumbnails)
+        public PostService(ILogger<SqlService> logger, SqlService sql, ImgurService imgur)
         {
             this.logger = logger;
             this.sql = sql;
-            this.thumbnails = thumbnails;
+            this.imgur = imgur;
         }
 
         public async Task PostPhoto(PostPhoto photoPost)
         {
-            var albumId = await sql.GetAlbumId(photoPost.channelId);
-            var userId = await GetOrCreateUserId(photoPost.uploaderId);
-            
-            var existingPhoto = await sql.GetPhotoFromUrl(photoPost.url);
-            if (existingPhoto == null)
+            var album = await sql.GetAlbumFromChannelId(photoPost.channelId);
+            if (album == null)
             {
-                var id = await sql.GetNextPhotoIdAsync();
-                var photo = new Photo(id, photoPost.url, albumId, userId, 0, photoPost.uploadTime, photoPost.caption, photoPost.messageId);
-                await sql.MergeItem(photo);
-                thumbnails.SaveThumbnail(id, photoPost.url);
+                throw new Exception("No album found for photo. " + photoPost.channelId);
             }
-            else
-            {
-                var photo = new Photo(existingPhoto.id, existingPhoto.url, albumId, userId, existingPhoto.score, photoPost.uploadTime, photoPost.caption, photoPost.messageId);
-                await sql.MergeItem(photo);
-            }
+
+            var getUserId = GetOrCreateUserId(photoPost.uploaderId);
+            var getId = sql.GetNextPhotoId();
+            var postUpload = imgur.UploadPhoto(photoPost.url, album.imgurId);
+            var postThumbnail = imgur.UploadThumbnail(photoPost.url);
+
+            var upload = await postUpload;
+            var thumbnail = await postThumbnail;
+
+            var photo = new Photo(
+                await getId,
+                upload.link, 
+                album.id, 
+                await getUserId, 
+                0, 
+                photoPost.uploadTime, 
+                photoPost.caption, 
+                photoPost.messageId, 
+                photoPost.messageIndex,
+                upload.id,
+                upload.deletehash,
+                thumbnail.id,
+                thumbnail.deletehash
+                );
+
+            await sql.MergeItem(photo);
         }
 
         public async Task<ReplyAlbumUrl> PostAlbum(PostAlbum albumPost)
         {
             var album = await GetOrCreateAlbum(albumPost);
-            await sql.MergeItem(album);
             var userIds = await DiscordIdsToUserIds(albumPost.members);
             await SetUsersInAlbum(album.id, userIds);
-            var encryptedId = Encryptor.Encrypt(album.id.ToString());
-            var url = $"http://www.brunch-projects.co.uk/album/{encryptedId}";
+            var url = $"http://www.brunch-projects.co.uk/album/{album.imgurId}";
             return new ReplyAlbumUrl(url);
         }
 
@@ -53,7 +66,7 @@ namespace photo_bot_back_end.Post
             var album = await sql.GetAlbum(datePost.albumId);
             if (album == null) { return; }
 
-            var newAlbum = new Album(album.id, album.channelId, album.name, datePost.year, datePost.month);
+            var newAlbum = new Album(album.id, album.channelId, album.imgurId, album.name, datePost.year, datePost.month);
             await sql.MergeItem(newAlbum);
         }
 
@@ -157,13 +170,18 @@ namespace photo_bot_back_end.Post
             var existingAlbum = await sql.GetAlbumFromChannelId(albumPost.channelId);
             if (existingAlbum == null)
             {
-                var id = await sql.GetNextAlbumId();
-                return new Album(id, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
+                var nextId = await sql.GetNextAlbumId();
+                var imgurAlbum = await imgur.CreateAlbum(albumPost.name);
+                var re = new Album(nextId, imgurAlbum.id, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
+                await sql.MergeItem(re);
+                return re;
             }
             else
             {
                 var newName = albumPost.name != "" ? albumPost.name : existingAlbum.name;
-                return new Album(existingAlbum.id, existingAlbum.channelId, newName, existingAlbum.year, existingAlbum.month);
+                var re = new Album(existingAlbum.id, existingAlbum.imgurId, existingAlbum.channelId, newName, existingAlbum.year, existingAlbum.month);
+                await sql.MergeItem(re);
+                return re;
             }
         }
 

@@ -9,13 +9,11 @@ namespace photo_bot_back_end.Misc
     {
 
         private readonly ILogger<PostController> logger;
-        private readonly ThumbnailService thumbnailService;
         private readonly SqlService sqlService;
 
-        public MiscController(ILogger<PostController> logger, ThumbnailService thumbnailService, SqlService sqlService)
+        public MiscController(ILogger<PostController> logger, SqlService sqlService)
         {
             this.logger = logger;
-            this.thumbnailService = thumbnailService;
             this.sqlService = sqlService;
         }
 
@@ -26,9 +24,11 @@ namespace photo_bot_back_end.Misc
 
             foreach (var photo in photos)
             {
+                /*
                 var isThumbail = thumbnailService.IsThumbnailExisting(photo.id);
                 if (isThumbail) { continue; }
                 thumbnailService.SaveThumbnail(photo.id, photo.url);
+                */
             }
         }
     }

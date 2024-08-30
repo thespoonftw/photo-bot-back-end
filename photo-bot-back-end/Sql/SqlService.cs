@@ -1,6 +1,4 @@
 ﻿
-using System.Text.RegularExpressions;
-
 namespace photo_bot_back_end.Sql
 {
     public class SqlService
@@ -12,16 +10,9 @@ namespace photo_bot_back_end.Sql
             this.logger = logger;
         }
 
-        public async Task<int> GetNextPhotoIdAsync()
+        public async Task<int> GetNextPhotoId()
         {
             using var sql = await SqlConnection.Query("SELECT MAX(id) FROM photo");
-            sql.Next();
-            return sql.ReadId() + 1;
-        }
-
-        public async Task<int> GetNextAlbumId()
-        {
-            using var sql = await SqlConnection.Query("SELECT MAX(id) FROM album");
             sql.Next();
             return sql.ReadId() + 1;
         }
@@ -33,11 +24,11 @@ namespace photo_bot_back_end.Sql
             return sql.ReadId() + 1;
         }
 
-        public async Task<int> GetAlbumId(string channelId)
+        public async Task<int> GetNextAlbumId()
         {
-            using var sql = await SqlConnection.Query($"SELECT id FROM album WHERE channelId={channelId}");
+            using var sql = await SqlConnection.Query("SELECT MAX(id) FROM album");
             sql.Next();
-            return sql.ReadId();
+            return sql.ReadId() + 1;
         }
 
         public async Task<int?> GetUserId(string discordId)
@@ -99,6 +90,16 @@ namespace photo_bot_back_end.Sql
                 return null;
             }
             return sql.ReadReact();
+        }
+
+        public async Task<Album?> GetAlbumFromImgurId(string imgurId)
+        {
+            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE imgurId={imgurId}");
+            if (!sql.Next())
+            {
+                return null;
+            }
+            return sql.ReadAlbum();
         }
 
         public async Task<Album?> GetAlbumFromChannelId(string channelId)

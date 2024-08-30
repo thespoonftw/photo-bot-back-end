@@ -14,13 +14,9 @@ namespace photo_bot_back_end.Post
             this.sql = sql;
         }
 
-        public async Task<ReplyAlbum?> GetAlbumForUrl(string url)
+        public async Task<ReplyAlbum?> GetAlbumForImgurId(string imgurId)
         {
-            var decrypt = Encryptor.Decrypt(url);
-            var isSuccess = int.TryParse(decrypt, out int id);
-            if (!isSuccess) { return null; }
-
-            var album = await sql.GetAlbum(id);
+            var album = await sql.GetAlbumFromImgurId(imgurId);
             if (album == null) { return null; }
 
             var photosAsync = sql.GetPhotosInAlbum(album.id);
@@ -34,7 +30,7 @@ namespace photo_bot_back_end.Post
             var counts = await sql.GetAlbumCounts();
             var albums = await albums_async;
             return albums.Select(a =>
-                new ReplyAlbumDirectory(Encryptor.Encrypt(a.id.ToString()), a.name, a.year, a.month, counts[a.id])
+                new ReplyAlbumDirectory(a.id, a.imgurId a.name, a.year, a.month, counts[a.id])
             );
         }
 
@@ -57,8 +53,7 @@ namespace photo_bot_back_end.Post
         public async Task<ReplyPhotos> GetPhotosByUser(int userId)
         {
             var photos = sql.GetPhotosByUser(userId);
-            var url = Encryptor.Encrypt($"u={userId}");
-            return new ReplyPhotos(url, await photos);
+            return new ReplyPhotos(userId.ToString(), await photos);
         }
 
         public async Task<ReplyPhotos> GetTrashPhotos()

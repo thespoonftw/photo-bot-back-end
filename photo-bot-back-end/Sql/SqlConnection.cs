@@ -62,6 +62,11 @@ namespace photo_bot_back_end.Sql
             return reader.GetInt32(0);
         }
 
+        public string ReadString(int index)
+        {
+            return reader.GetString(index);
+        }
+
         public int ReadInt(int index)
         {
             return reader.GetInt32(index);
@@ -70,11 +75,12 @@ namespace photo_bot_back_end.Sql
         public Album ReadAlbum()
         {
             var id = reader.GetInt32(0);
-            var channelId = reader.GetString(1);
-            var name = reader.GetString(2);
-            var year = reader.GetInt32(3);
-            var month = reader.GetInt32(4);
-            return new Album(id, channelId, name, year, month);
+            var imgurId = reader.GetString(1);
+            var channelId = reader.GetString(2);
+            var name = reader.GetString(3);
+            var year = reader.GetInt32(4);
+            var month = reader.GetInt32(5);
+            return new Album(id, imgurId, channelId, name, year, month);
         }
 
         public Photo ReadPhoto()
@@ -87,7 +93,12 @@ namespace photo_bot_back_end.Sql
             var uploadTime = reader.SafeGetString(5);
             var caption = reader.SafeGetString(6);
             var messageId = reader.SafeGetString(7);
-            return new Photo(id, url, albumId, userId, score, uploadTime, caption, messageId);
+            var messageIndex = reader.GetInt32(8);
+            var imgurId = reader.SafeGetString(9);
+            var deleteHash = reader.SafeGetString(10);
+            var thumbnailId = reader.SafeGetString(11);
+            var thumbnailHash = reader.SafeGetString(12);
+            return new Photo(id, url, albumId, userId, score, uploadTime, caption, messageId, messageIndex, imgurId, deleteHash, thumbnailId, thumbnailHash);
         }
 
         public User ReadUser()
