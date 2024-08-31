@@ -94,7 +94,7 @@ namespace photo_bot_back_end.Sql
 
         public async Task<Album?> GetAlbumFromImgurId(string imgurId)
         {
-            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE imgurId={imgurId}");
+            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE imgurId='{imgurId}'");
             if (!sql.Next())
             {
                 return null;
@@ -104,7 +104,7 @@ namespace photo_bot_back_end.Sql
 
         public async Task<Album?> GetAlbumFromChannelId(string channelId)
         {
-            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE channelId={channelId}");
+            using var sql = await SqlConnection.Query($"SELECT * FROM album WHERE channelId='{channelId}'");
             if (!sql.Next())
             {
                 return null;
