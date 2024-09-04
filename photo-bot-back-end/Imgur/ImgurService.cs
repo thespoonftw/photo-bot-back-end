@@ -117,6 +117,7 @@ namespace photo_bot_back_end.Sql
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
+            client.DefaultRequestHeaders.Referrer = null;
             var response = await client.PostAsync(path, content);
 
             if (!response.IsSuccessStatusCode)
