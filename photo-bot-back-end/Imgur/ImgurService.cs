@@ -3,9 +3,11 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.Fonts;
 using System.Runtime.Serialization;
-using System.Text;
+using SixLabors.ImageSharp.Drawing.Processing;
 using System.Text.Json;
+using System.Text;
 using System.Text.Json.Nodes;
 
 namespace photo_bot_back_end.Sql
@@ -19,6 +21,8 @@ namespace photo_bot_back_end.Sql
         private const string IMGUR_PHOTO_PATH = "https://api.imgur.com/3/image";
         private const int THUMBNAIL_SIZE_PIXELS = 300;
 
+        private Font font = SystemFonts.CreateFont("Arial", 24);
+
         private readonly ILogger<ImgurService> logger;
 
         public ImgurService(ILogger<ImgurService> logger)
@@ -29,10 +33,12 @@ namespace photo_bot_back_end.Sql
         public async Task<ImgurAlbumReply> CreateAlbum(string name)
         {
             using var content = new MultipartFormDataContent();
-            var byteArray = CreateWhiteBox();
+            var byteArray = CreateAlbumImage(name);
             content.Add(new StringContent("file"), "type");
             content.Add(new ByteArrayContent(byteArray), "image", "thumbnail.jpg");
             var whiteBoxUpload = await PostContent<ImgurUploadReply>(content, IMGUR_PHOTO_PATH, UPLOAD_ACCESS_TOKEN);
+
+            await Task.Delay(500);
 
             var obj = new ImgurAlbum(name, DateTime.Now.ToString(), new string[] { whiteBoxUpload.id });
             return await SerializeAndPostContent<ImgurAlbumReply>(obj, IMGUR_ALBUM_PATH, UPLOAD_ACCESS_TOKEN);
@@ -81,9 +87,20 @@ namespace photo_bot_back_end.Sql
             return memoryStream.ToArray();
         }
 
-        private byte[] CreateWhiteBox()
+        private byte[] CreateAlbumImage(string text)
         {
             using var image = new Image<Rgba32>(THUMBNAIL_SIZE_PIXELS, THUMBNAIL_SIZE_PIXELS, Color.White);
+
+            var options = new RichTextOptions(font) 
+            {
+                Origin = new PointF(10, 10),
+            };
+
+            image.Mutate(ctx =>
+            {
+                ctx.DrawText(options, text, Color.Black);
+            });
+
             using var memoryStream = new MemoryStream();
             image.Save(memoryStream, new JpegEncoder());
             return memoryStream.ToArray();
