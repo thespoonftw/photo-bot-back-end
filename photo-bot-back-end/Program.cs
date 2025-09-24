@@ -9,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddSingleton<SqlService>();
-builder.Services.AddSingleton<ImgurService>();
 builder.Services.AddSingleton<PostService>();
 builder.Services.AddSingleton<GetService>();
 

@@ -1,6 +1,4 @@
-﻿using photo_bot_back_end;
-using photo_bot_back_end.Misc;
-using photo_bot_back_end.Sql;
+﻿using photo_bot_back_end.Sql;
 
 namespace photo_bot_back_end.Post
 {
@@ -8,13 +6,11 @@ namespace photo_bot_back_end.Post
     {
         private readonly ILogger<SqlService> logger;
         private readonly SqlService sql;
-        private readonly ImgurService imgur;
 
-        public PostService(ILogger<SqlService> logger, SqlService sql, ImgurService imgur)
+        public PostService(ILogger<SqlService> logger, SqlService sql)
         {
             this.logger = logger;
             this.sql = sql;
-            this.imgur = imgur;
         }
 
         public async Task PostPhoto(PostPhoto photoPost)
@@ -27,15 +23,14 @@ namespace photo_bot_back_end.Post
 
             var getUserId = GetOrCreateUserId(photoPost.uploaderId);
             var getId = sql.GetNextPhotoId();
-            var postUpload = imgur.UploadPhoto(photoPost.url, album.imgurId);
-            var postThumbnail = imgur.UploadThumbnail(photoPost.url);
-
-            var upload = await postUpload;
-            var thumbnail = await postThumbnail;
+            //var postUpload = imgur.UploadPhoto(photoPost.url, album.imgurId);
+            //var postThumbnail = imgur.UploadThumbnail(photoPost.url);
+            //var upload = await postUpload;
+            //var thumbnail = await postThumbnail;
 
             var photo = new Photo(
                 await getId,
-                upload.link, 
+                string.Empty, 
                 album.id, 
                 await getUserId, 
                 0, 
@@ -43,10 +38,10 @@ namespace photo_bot_back_end.Post
                 photoPost.caption, 
                 photoPost.messageId, 
                 photoPost.messageIndex,
-                upload.id,
-                upload.deletehash,
-                thumbnail.id,
-                thumbnail.deletehash
+                string.Empty, 
+                string.Empty,
+                string.Empty,
+                string.Empty
                 );
 
             await sql.MergeItem(photo);
@@ -171,8 +166,8 @@ namespace photo_bot_back_end.Post
             if (existingAlbum == null)
             {
                 var nextId = await sql.GetNextAlbumId();
-                var imgurAlbum = await imgur.CreateAlbum(albumPost.name);
-                var re = new Album(nextId, imgurAlbum.id, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
+                // TODO remove imgur album id
+                var re = new Album(nextId, string.Empty, albumPost.channelId, albumPost.name, DateTime.Now.Year, DateTime.Now.Month);
                 await sql.MergeItem(re);
                 return re;
             }
