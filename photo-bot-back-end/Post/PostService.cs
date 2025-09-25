@@ -4,13 +4,15 @@ namespace photo_bot_back_end.Post
 {
     public class PostService
     {
-        private readonly ILogger<SqlService> logger;
+        private readonly ILogger<PostService> logger;
         private readonly SqlService sql;
+        private readonly ImageService image;
 
-        public PostService(ILogger<SqlService> logger, SqlService sql)
+        public PostService(ILogger<PostService> logger, SqlService sql, ImageService image)
         {
             this.logger = logger;
             this.sql = sql;
+            this.image = image;
         }
 
         public async Task PostPhoto(PostPhoto photoPost)
@@ -22,15 +24,17 @@ namespace photo_bot_back_end.Post
             }
 
             var getUserId = GetOrCreateUserId(photoPost.uploaderId);
-            var getId = sql.GetNextPhotoId();
+            var id = await sql.GetNextPhotoId();
+            var getImagePath =  image.SaveImage(photoPost.url, id);
+
             //var postUpload = imgur.UploadPhoto(photoPost.url, album.imgurId);
             //var postThumbnail = imgur.UploadThumbnail(photoPost.url);
             //var upload = await postUpload;
             //var thumbnail = await postThumbnail;
 
             var photo = new Photo(
-                await getId,
-                string.Empty, 
+                id,
+                await getImagePath, 
                 album.id, 
                 await getUserId, 
                 0, 

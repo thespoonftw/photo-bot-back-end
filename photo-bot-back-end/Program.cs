@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<SqlService>();
 builder.Services.AddSingleton<PostService>();
 builder.Services.AddSingleton<GetService>();
+builder.Services.AddSingleton<ImageService>();
 
 var app = builder.Build();
 
